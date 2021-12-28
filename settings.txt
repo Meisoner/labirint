@@ -1,3 +1,4 @@
 floor 0
 fov 30
-lala 7.12
+rays 150
+raylen 5
