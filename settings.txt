@@ -1,4 +1,4 @@
 floor 0
-fov 30
-rays 150
-raylen 5
+fov 70
+rays 10
+raylen 20

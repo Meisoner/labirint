@@ -16,8 +16,8 @@ plrs, obj = [pg.sprite.Group() for _ in range(2)]
 plr = Player(BLS, size, plrs)
 st = Settings('Settings.txt')
 fov = (st.fov * math.pi) / 180
-step = math.sqrt((math.cos(fov) - 1) ** 2 + math.sin(fov) ** 2) / st.rays
-angle = (1, 0)
+step = fov / st.rays
+angle = 0
 while run:
     screen.fill((0, 0, 0))
     pc = plr.get_centre()
@@ -25,9 +25,12 @@ while run:
         i.fill((0, 0, 0))
         plrs.draw(i)
         for rayn in range(st.rays):
+            sn = math.sin(angle - fov + rayn * step)
+            cs = math.cos(angle - fov + rayn * step)
             for ray in range(st.raylen):
-                pg.draw.line(i, (255, 255, 255), pc, (int((angle[0] - step * rayn) * ray * BLS[0]),
-                                                      int((angle[1] - step * rayn) * ray * BLS[1])))
+                rx = pc[0] + ray * cs * 10
+                ry = pc[1] + ray * sn * 10
+                pg.draw.line(i, (255, 255, 255), pc, (rx, ry))
     screen.blit(layers[1], (0, 0))
     pg.display.flip()
     for i in pg.event.get():
