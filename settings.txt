@@ -1,4 +1,5 @@
 floor 0
 fov 70
 rays 10
-raylen 20
+raylen 200
+maxheight 10
