@@ -4,7 +4,7 @@ from Block import *
 from Utilites import *
 
 
-BLS = (50, 50)
+BLS = 50
 
 
 pg.init()
@@ -23,8 +23,8 @@ angle = 0
 clock = pg.time.Clock()
 pressed = [False] * 4
 keys = [pg.K_w, pg.K_s, pg.K_a, pg.K_d]
-block_image = pg.Surface(BLS)
-pg.draw.rect(block_image, (255, 0, 255), (0, 0, BLS[0], BLS[1]))
+block_image = pg.Surface((BLS, BLS))
+pg.draw.rect(block_image, (255, 0, 255), (0, 0, BLS, BLS))
 Block(objs[1], block_image, 2, 4, 1)
 while run:
     tick = clock.tick()
@@ -41,7 +41,7 @@ while run:
                 pg.draw.line(layers[i], (255, 255, 255), pc, (pc[0] + ray * cs, pc[1] + ray * sn))
                 tobreak = False
                 for r in rects[i]:
-                    if r[0] <= pc[0] + ray * cs <= r[0] + BLS[0] and r[1] <= pc[1] + ray * sn <= r[1] + BLS[1]:
+                    if r[0] <= pc[0] + ray * cs <= r[0] + BLS and r[1] <= pc[1] + ray * sn <= r[1] + BLS:
                         tobreak = True
                         break
                 if tobreak:
