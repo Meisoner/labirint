@@ -26,6 +26,7 @@ keys = [pg.K_w, pg.K_s, pg.K_a, pg.K_d]
 block_image = pg.Surface((BLS, BLS))
 pg.draw.rect(block_image, (255, 0, 255), (0, 0, BLS, BLS))
 Block(objs[1], block_image, 2, 4, 1)
+xdist, ydist = 0, 0
 while run:
     tick = clock.tick()
     screen.fill((0, 0, 0))
@@ -36,19 +37,46 @@ while run:
         objs[i].draw(layers[i])
         for rayn in range(st.rays):
             sn = optsin(angle - fov + rayn * step)
+            if not sn:
+                sn = 10 ** -5
             cs = optcos(angle - fov + rayn * step)
-            for ray in range(st.raylen):
-                pg.draw.line(layers[i], (255, 255, 255), pc, (pc[0] + ray * cs, pc[1] + ray * sn))
-                tobreak = False
+            if not cs:
+                cs = 10 ** -5
+            tg = sn / cs
+            pc2 = [(i // BLS) * BLS for i in pc]
+            sgn = [round(cs / abs(cs)), round(sn / abs(sn))]
+            pc2[0] += BLS * (sgn[0] + 1) // 2
+            pc2[1] += BLS * (sgn[1] + 1) // 2
+            for _ in range(size[0] // BLS):
+                y = pc[1] + (pc2[0] - pc[0]) * tg
                 for r in rects[i]:
-                    if r[0] <= pc[0] + ray * cs <= r[0] + BLS and r[1] <= pc[1] + ray * sn <= r[1] + BLS:
+                    if r[0] <= pc2[0] <= r[0] + BLS and r[1] <= y <= r[1] + BLS:
                         tobreak = True
                         break
                 if tobreak:
-                    dists[i][rayn] = round(ray * math.sqrt(cs ** 2 + sn ** 2))
+                    xdist = (pc2[0] - pc[0]) / cs
                     break
-            if not tobreak:
-                dists[i][rayn] = 0
+                else:
+                    xdist = 0
+                pc2[0] += sgn[0] * BLS
+            tobreak = False
+            for _ in range(size[1] // BLS):
+                x = pc[0] + (pc2[1] - pc[1]) / tg
+                for r in rects[i]:
+                    if r[0] <= x <= r[0] + BLS and r[1] <= pc2[1] <= r[1] + BLS:
+                        tobreak = True
+                        break
+                if tobreak:
+                    ydist = (pc2[1] - pc[1]) / sn
+                    break
+                else:
+                    ydist = 0
+                pc2[0] += sgn[0] * BLS
+            tobreak = False
+            if xdist <= ydist:
+                dists[i][rayn] = abs(int(xdist * optcos(angle - fov + rayn * step)))
+            else:
+                dists[i][rayn] = abs(int(ydist * optcos(angle - fov + rayn * step)))
     screen.blit(layers[1], (0, 0))
     for i in range(4):
         if pressed[i]:
@@ -79,3 +107,6 @@ while run:
             elif angle < 0:
                 angle = 2 * PI
             pg.mouse.set_pos(size[0] // 2, size[1] // 2)
+    for i in dists[1]:
+        if i:
+            print(i)

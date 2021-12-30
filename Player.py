@@ -7,7 +7,7 @@ class Player(pg.sprite.Sprite):
         self.image = pg.Surface((blsize, blsize))
         pg.draw.rect(self.image, (100, 100, 100), (0, 0, 50, 50))
         self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = size[0] // 2 - self.rect.size[0] // 2, size[1] // 2 - self.rect.size[1] // 2
+        self.rect.x, self.rect.y = 0, 0
         self.dx = self.dy = 0
 
     def get_centre(self):
