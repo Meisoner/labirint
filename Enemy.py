@@ -23,3 +23,4 @@ class Enemy(pg.sprite.Sprite):
         if not (-1 < self.dy < 1):
             self.rect.y += int(self.dy)
             self.dy -= int(self.dy)
+
