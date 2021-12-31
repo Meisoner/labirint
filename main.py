@@ -41,14 +41,10 @@ while run:
     screen.fill((0, 0, 0))
     pc = plr.get_centre()
     if tick > 70:
-        enm0.kill()
-        enm1.kill()
-        enm2.kill()
-        enm3.kill()
-        enm0 = Enemy(BLS, size, plrs)
-        enm1 = Enemy(BLS, size, plrs)
-        enm2 = Enemy(BLS, size, plrs)
-        enm3 = Enemy(BLS, size, plrs)
+        enm0.new()
+        enm1.new()
+        enm2.new()
+        enm3.new()
     for i in range(st.maxheight):
         layers[i].fill((0, 0, 0))
         plrs.draw(layers[i])
