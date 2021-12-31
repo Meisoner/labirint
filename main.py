@@ -20,7 +20,12 @@ objs = [pg.sprite.Group() for _ in range(st.maxheight)]
 dists = [[0] * st.rays for _ in range(st.maxheight)]
 plrs = pg.sprite.Group()
 plr = Player(BLS, size, plrs)
-enm = Enemy(BLS, size, plrs)
+
+enm0 = Enemy(BLS, size, plrs)
+enm1 = Enemy(BLS, size, plrs)
+enm2 = Enemy(BLS, size, plrs)
+enm3 = Enemy(BLS, size, plrs)
+
 fov = radians(st.fov)
 step = fov / st.rays
 angle = 0
@@ -35,6 +40,15 @@ while run:
     tick = clock.tick()
     screen.fill((0, 0, 0))
     pc = plr.get_centre()
+    if tick > 70:
+        enm0.kill()
+        enm1.kill()
+        enm2.kill()
+        enm3.kill()
+        enm0 = Enemy(BLS, size, plrs)
+        enm1 = Enemy(BLS, size, plrs)
+        enm2 = Enemy(BLS, size, plrs)
+        enm3 = Enemy(BLS, size, plrs)
     for i in range(st.maxheight):
         layers[i].fill((0, 0, 0))
         plrs.draw(layers[i])
@@ -49,7 +63,7 @@ while run:
             tg = sn / cs
             pc2 = [(i // BLS) * BLS for i in pc]
             sgn = [round(cs / abs(cs)), round(sn / abs(sn))]
-            pc2[0] += BLS * (sgn[0] + 1) // 2
+            pc2[0] += BLS * (sgn[0] + 1) // 2 + 1
             pc2[1] += BLS * (sgn[1] + 1) // 2
             for _ in range(size[0] // BLS):
                 y = int(pc[1] + (pc2[0] - pc[0]) * tg)
@@ -86,9 +100,13 @@ while run:
             else:
                 dists[i][rayn] = 0
     screen.blit(layers[1], (0, 0))
+    enm0.update(5, 5)
+    enm1.update(0, 15)
+    enm2.update(15, 0)
+    enm3.update(-5, -5)
     for i in range(4):
         if pressed[i]:
-            enm.update(random.randint(-30, 30), random.randint(-30, 30))
+
             if i < 2:
                 plr.update(0, tick * (2 * i - 1) * 0.2)
             else:
