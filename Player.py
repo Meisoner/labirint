@@ -17,8 +17,8 @@ class Player(pg.sprite.Sprite):
         self.dx += x
         self.dy += y
         if not (-1 < self.dx < 1):
-            self.rect.x += int(abs(self.dx) / self.dx)
-            self.dx = 0
+            self.rect.x += int(self.dx)
+            self.dx -= int(self.dx)
         if not (-1 < self.dy < 1):
-            self.rect.y += int(abs(self.dy) / self.dy)
-            self.dy = 0
+            self.rect.y += int(self.dy)
+            self.dy -= int(self.dy)

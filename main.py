@@ -48,7 +48,7 @@ while run:
             pc2[0] += BLS * (sgn[0] + 1) // 2
             pc2[1] += BLS * (sgn[1] + 1) // 2
             for _ in range(size[0] // BLS):
-                y = pc[1] + (pc2[0] - pc[0]) * tg
+                y = int(pc[1] + (pc2[0] - pc[0]) * tg)
                 for r in rects[i]:
                     if r[0] <= pc2[0] <= r[0] + BLS and r[1] <= y <= r[1] + BLS:
                         tobreak = True
@@ -57,11 +57,11 @@ while run:
                     xdist = (pc2[0] - pc[0]) / cs
                     break
                 else:
-                    xdist = 0
+                    xdist = st.raylen + BLS
                 pc2[0] += sgn[0] * BLS
             tobreak = False
             for _ in range(size[1] // BLS):
-                x = pc[0] + (pc2[1] - pc[1]) / tg
+                x = int(pc[0] + (pc2[1] - pc[1]) / tg)
                 for r in rects[i]:
                     if r[0] <= x <= r[0] + BLS and r[1] <= pc2[1] <= r[1] + BLS:
                         tobreak = True
@@ -70,20 +70,24 @@ while run:
                     ydist = (pc2[1] - pc[1]) / sn
                     break
                 else:
-                    ydist = 0
+                    ydist = st.raylen + BLS
                 pc2[0] += sgn[0] * BLS
             tobreak = False
-            if xdist <= ydist:
-                dists[i][rayn] = abs(int(xdist * optcos(angle - fov + rayn * step)))
+            if xdist != st.raylen + BLS or ydist != st.raylen + BLS:
+                print(xdist, ydist)
+                if xdist <= ydist:
+                    dists[i][rayn] = abs(round(xdist * optcos(angle - fov + rayn * step)))
+                else:
+                    dists[i][rayn] = abs(round(ydist * optcos(angle - fov + rayn * step)))
             else:
-                dists[i][rayn] = abs(int(ydist * optcos(angle - fov + rayn * step)))
+                dists[i][rayn] = 0
     screen.blit(layers[1], (0, 0))
     for i in range(4):
         if pressed[i]:
             if i < 2:
-                plr.update(0, tick * 2 * (2 * i - 1))
+                plr.update(0, tick * (2 * i - 1))
             else:
-                plr.update(tick * 2 * (2 * i - 5), 0)
+                plr.update(tick * (2 * i - 5), 0)
     pg.display.flip()
     for i in pg.event.get():
         if i.type == pg.QUIT:
@@ -107,6 +111,3 @@ while run:
             elif angle < 0:
                 angle = 2 * PI
             pg.mouse.set_pos(size[0] // 2, size[1] // 2)
-    for i in dists[1]:
-        if i:
-            print(i)
