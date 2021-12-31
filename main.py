@@ -25,8 +25,10 @@ pressed = [False] * 4
 keys = [pg.K_w, pg.K_s, pg.K_a, pg.K_d]
 block_image = pg.Surface((BLS, BLS))
 pg.draw.rect(block_image, (255, 0, 255), (0, 0, BLS, BLS))
-Block(objs[1], block_image, 2, 4, 1)
+for i in range(2):
+    Block(objs[1], block_image, 2 + i, 4, 1)
 xdist, ydist = 0, 0
+k = st.rays * BLS / (2 * math.tan(st.fov))
 while run:
     tick = clock.tick()
     screen.fill((0, 0, 0))
@@ -71,23 +73,27 @@ while run:
                     break
                 else:
                     ydist = st.raylen + BLS
-                pc2[0] += sgn[0] * BLS
+                pc2[1] += sgn[1] * BLS
             tobreak = False
             if xdist != st.raylen + BLS or ydist != st.raylen + BLS:
-                print(xdist, ydist)
                 if xdist <= ydist:
                     dists[i][rayn] = abs(round(xdist * optcos(angle - fov + rayn * step)))
                 else:
                     dists[i][rayn] = abs(round(ydist * optcos(angle - fov + rayn * step)))
             else:
                 dists[i][rayn] = 0
+            # print(dists[1])
+            if dists[i][rayn]:
+                c = 255 / (1 + dists[i][rayn] ** 2 * 0.00002)
+                hg = k / dists[i][rayn]
+                pg.draw.rect(layers[i], (c, c, c), (rayn * (size[0] // st.rays), size[1] // 2 - int(hg / 2), (size[0] // st.rays), int(hg)))
     screen.blit(layers[1], (0, 0))
     for i in range(4):
         if pressed[i]:
             if i < 2:
-                plr.update(0, tick * (2 * i - 1))
+                plr.update(0, tick * (2 * i - 1) / 5)
             else:
-                plr.update(tick * (2 * i - 5), 0)
+                plr.update(tick * (2 * i - 5) / 5, 0)
     pg.display.flip()
     for i in pg.event.get():
         if i.type == pg.QUIT:
@@ -99,7 +105,6 @@ while run:
                 for key in range(4):
                     if i.key == keys[key]:
                         pressed[key] = True
-            print(dists)
         elif i.type == pg.KEYUP:
             for key in range(4):
                 if i.key == keys[key]:
