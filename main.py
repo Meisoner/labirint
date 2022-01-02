@@ -22,7 +22,7 @@ step = fov / st.rays
 angle = 0
 clock = pg.time.Clock()
 pressed = [False] * 4
-keys = [pg.K_w, pg.K_s, pg.K_a, pg.K_d]
+keys = [pg.K_w, pg.K_a, pg.K_s, pg.K_d]
 block_image = pg.Surface((BLS, BLS))
 pg.draw.rect(block_image, (255, 0, 255), (0, 0, BLS, BLS))
 for i in range(2):
@@ -84,10 +84,7 @@ while run:
     screen.blit(layers[1], (0, 0))
     for i in range(4):
         if pressed[i]:
-            if i < 2:
-                plr.update(0, tick * (2 * i - 1) / 10)
-            else:
-                plr.update(tick * (2 * i - 5) / 10, 0)
+            plr.update(optcos(angle - radians(90 * i)) * tick / 10, optsin(angle - radians(90 * i)) * tick / 10)
     pg.display.flip()
     for i in pg.event.get():
         if i.type == pg.QUIT:
@@ -104,7 +101,7 @@ while run:
                 if i.key == keys[key]:
                     pressed[key] = False
         elif i.type == pg.MOUSEMOTION:
-            angle += radians(i.pos[0] - size[0] // 2)
+            angle += radians(i.pos[0] - size[0] // 2) / 2
             if angle >= 2 * PI:
                 angle = 0
             elif angle < 0:
