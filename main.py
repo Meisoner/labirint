@@ -21,10 +21,10 @@ dists = [[0] * st.rays for _ in range(st.maxheight)]
 plrs = pg.sprite.Group()
 plr = Player(BLS, size, plrs)
 
-enm0 = Enemy(BLS, size, plrs)
-enm1 = Enemy(BLS, size, plrs)
-enm2 = Enemy(BLS, size, plrs)
-enm3 = Enemy(BLS, size, plrs)
+enms = pg.sprite.Group()
+
+for _ in range(10):
+    Enemy(BLS, enms)
 
 fov = radians(st.fov)
 step = fov / st.rays
@@ -37,17 +37,15 @@ pg.draw.rect(block_image, (255, 0, 255), (0, 0, BLS, BLS))
 Block(objs[1], block_image, 2, 4, 1)
 xdist, ydist = 0, 0
 while run:
+    n = 0
     tick = clock.tick()
     screen.fill((0, 0, 0))
     pc = plr.get_centre()
-    if tick > 70:
-        enm0.new()
-        enm1.new()
-        enm2.new()
-        enm3.new()
+    n += 1
     for i in range(st.maxheight):
         layers[i].fill((0, 0, 0))
         plrs.draw(layers[i])
+        enms.draw(layers[i])
         objs[i].draw(layers[i])
         for rayn in range(st.rays):
             sn = optsin(angle - fov + rayn * step)
@@ -96,17 +94,16 @@ while run:
             else:
                 dists[i][rayn] = 0
     screen.blit(layers[1], (0, 0))
-    enm0.update(5, 5)
-    enm1.update(0, 15)
-    enm2.update(15, 0)
-    enm3.update(-5, -5)
+    if n == 10:
+        enms.update(random.randint(-10, 10), random.randint(-10, 10))
+        n = 0
     for i in range(4):
         if pressed[i]:
 
             if i < 2:
-                plr.update(0, tick * (2 * i - 1) * 0.2)
+                plr.update(0, tick * (2 * i - 1) * 0.8)
             else:
-                plr.update(tick * (2 * i - 5) * 0.2, 0)
+                plr.update(tick * (2 * i - 5) * 0.8, 0)
     pg.display.flip()
     for i in pg.event.get():
         if i.type == pg.QUIT:
