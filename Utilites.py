@@ -1,4 +1,6 @@
 import math
+import pygame as pg
+from Settings import st
 
 
 PI = math.pi
@@ -24,3 +26,12 @@ def optcos(x):
         return coses[rx]
     coses[rx] = math.cos(x)
     return coses[rx]
+
+
+def draw(screen, size, height, colour, ray, layers):
+    col = (colour, colour, colour)
+    x = ray * (size[0] // st.rays), (size[0] // st.rays)
+    y = size[1] // 2 + int(height / 2)
+    for i in layers:
+        y1 = y + (height - 1) * (i - 1)
+        pg.draw.rect(screen, col, (x[0], size[1] - y1, x[1], height))

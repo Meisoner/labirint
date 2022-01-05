@@ -1,7 +1,7 @@
 import pygame as pg
-from Settings import Settings
+from Settings import st
 
-st = Settings('settings.txt')
+
 rects = [list() for _ in range(st.maxheight)]
 
 

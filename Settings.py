@@ -18,3 +18,6 @@ class Settings:
         if k in self.mdict.keys():
             return self.mdict[k]
         return None
+
+
+st = Settings('settings.txt')
