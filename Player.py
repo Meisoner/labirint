@@ -16,7 +16,7 @@ class Player(pg.sprite.Sprite):
     def get_centre(self):
         return (self.rect.x + self.rect.size[0] // 2, self.rect.y + self.rect.size[1] // 2)
 
-    def update(self, x, y, all):
+    def update(self, x, y, total1, total2):
         self.dx += x
         self.dy += y
         if not (-1 < self.dx < 1):
@@ -25,7 +25,10 @@ class Player(pg.sprite.Sprite):
         if not (-1 < self.dy < 1):
             self.rect.y += int(self.dy)
             self.dy -= int(self.dy)
-        if pg.sprite.spritecollideany(self, all):
+        if pg.sprite.spritecollideany(self, total1):
+            self.dx -= x
+            self.dy -= y
+        if pg.sprite.spritecollideany(self, total2):
             self.dx -= x
             self.dy -= y
 
