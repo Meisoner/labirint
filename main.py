@@ -78,7 +78,7 @@ while run:
             ydist = st.raylen + BLS
             pc2[1] += sgn[1] * BLS
         if xdist != st.raylen + BLS or ydist != st.raylen + BLS:
-            dists[rayn] = abs(round(min(xdist, ydist) * optcos(fov - rayn * step)))
+            dists[rayn] = min(xdist, ydist) * optcos(fov / 2 - rayn * step)
             if xdist < ydist:
                 vsblocks[rayn] = xbl
             else:
