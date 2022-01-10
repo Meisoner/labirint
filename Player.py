@@ -19,18 +19,19 @@ class Player(pg.sprite.Sprite):
     def update(self, x, y, total1, total2):
         self.dx += x
         self.dy += y
-        if not (-1 < self.dx < 1):
-            self.rect.x += int(self.dx)
-            self.dx -= int(self.dx)
-        if not (-1 < self.dy < 1):
-            self.rect.y += int(self.dy)
-            self.dy -= int(self.dy)
         if pg.sprite.spritecollideany(self, total1):
             self.dx -= x
             self.dy -= y
         if pg.sprite.spritecollideany(self, total2):
             self.dx -= x
             self.dy -= y
+        if not (-1 < self.dx < 1):
+            self.rect.x += int(self.dx)
+            self.dx -= int(self.dx)
+        if not (-1 < self.dy < 1):
+            self.rect.y += int(self.dy)
+            self.dy -= int(self.dy)
+
 
     def hit(self):
         return self.domage

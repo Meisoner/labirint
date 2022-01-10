@@ -29,7 +29,7 @@ BLSen = 10
 enms = pg.sprite.Group()
 ens_img = pg.Surface((BLSen, BLSen))
 for i in range(ur):
-    enm = Enemy(BLSen, ens_img, enms, kol)
+    Enemy(BLSen, ens_img, enms, kol)
 
 
 
@@ -43,7 +43,7 @@ block_image = pg.Surface((BLS, BLS))
 pg.draw.rect(block_image, (255, 0, 255), (0, 0, BLS, BLS))
 for i in range(2):
     Block(objs[1], block_image, 2, 4 + i, 1)
-Block(objs[2], block_image, 2, 4, 2)
+    Block(objs[2], block_image, 2, 4, 2)
 xdist, ydist = 0, 0
 k = st.rays * BLS / (2 * math.tan(st.fov))
 allrects = []
@@ -60,6 +60,7 @@ while run:
     screen.fill((0, 0, 0))
     pg.draw.rect(screen, (0, 0, 100), ((0, 0), (1000, 300)))
     pc = plr.get_centre()
+    enms.update(10, 10, plrs, objs[1])
     for i in range(st.maxheight):
         layers[i].fill((0, 0, 0))
         pg.draw.rect(layers[i], (0, 0, 100), ((0, 0), (1000, 300)))
@@ -110,6 +111,7 @@ while run:
         else:
             dists[rayn] = 0
     for rayn, dist in enumerate(dists):
+        t = 1
 
         if not dist:
             continue
@@ -118,8 +120,8 @@ while run:
             if vsblocks[rayn] in rects[layer]:
                 drawing_layers += [layer]
                 t = 1
-
-        for layer in range(st.maxheight):
+        enms.update(10, 10, plrs, objs[1])
+        for layer in range(len(enemys)):
             if vsblocks[rayn] in enemys[layer]:
                 drawing_layers += [layer]
                 t = 2
@@ -132,11 +134,11 @@ while run:
 
     for i in range(4):
         if pressed[i]:
-            plr.update(optcos(angle - radians(90 * i)) * tick / 20, optsin(angle - radians(90 * i)) * tick / 20, objs[1], enms)
+            plr.update(optcos(angle - radians(90 * i)) * tick / 10, optsin(angle - radians(90 * i)) * tick / 10, objs[1], enms)
+    for i in enms:
+        i.new_pos()
     pg.display.flip()
 
-    for i in enms:
-        i.update(optcos(random.randint(-15, 15)) * tick / 20, optsin(random.randint(-15, 15)) * tick / 20, plrs, objs[1])
 
 
     vsblocks = [[]] * st.rays
