@@ -2,6 +2,7 @@ import pygame as pg
 from Player import Player
 from Block import *
 from Utilites import *
+from Generator import labirint, rr
 
 
 BLS = 50
@@ -25,8 +26,17 @@ pressed = [False] * 4
 keys = [pg.K_w, pg.K_a, pg.K_s, pg.K_d]
 block_image = pg.Surface((BLS, BLS))
 pg.draw.rect(block_image, (255, 0, 255), (0, 0, BLS, BLS))
-for i in range(2):
-    Block(objs[1], block_image, 2, 4 + i, 1)
+lb = labirint(20, (5, 0))
+for i in lb:
+    for j in i:
+        print(j, end='')
+    print()
+for x in range(len(lb)):
+    for y in range(len(lb)):
+        if lb[x][y]:
+            Block(objs[1], block_image, x, y, 1)
+            if not rr(4):
+                Block(objs[1], block_image, x, y, 2)
 Block(objs[2], block_image, 2, 4, 2)
 xdist, ydist = 0, 0
 k = st.rays * BLS / (2 * math.tan(st.fov))
