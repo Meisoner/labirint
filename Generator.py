@@ -9,6 +9,24 @@ def optimals(x, y, dists):
     return res
 
 
+def filtr(lab):
+    lcopy = []
+    for i in lab:
+        lcopy += [[]]
+        for j in i:
+            lcopy[-1] += [j]
+    for x in range(len(lab) - 1):
+        for y in range(len(lab) - 1):
+            kvo = 0
+            for t1 in range(3):
+                for t2 in range(3):
+                    if lab[x + t1 - 1][y + t2 - 1] == 1:
+                        kvo += 1
+            if kvo == 9:
+                lcopy[x][y] = 0
+    return lcopy
+
+
 def labirint(size, startpos):
     res = [[1] * size for _ in range(size)]
     x, y = startpos
@@ -37,4 +55,4 @@ def labirint(size, startpos):
                     goal += [x, y, j[0], j[1]]
             k += 1
         goal = goal[4:]
-    return res
+    return filtr(res)
