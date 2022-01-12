@@ -26,20 +26,13 @@ pressed = [False] * 4
 keys = [pg.K_w, pg.K_a, pg.K_s, pg.K_d]
 block_image = pg.Surface((BLS, BLS))
 pg.draw.rect(block_image, (255, 0, 255), (0, 0, BLS, BLS))
-lb = labirint(20, (5, 0))
-for i in lb:
-    for j in i:
-        print(j, end='')
-    print()
-for x in range(len(lb)):
-    for y in range(len(lb)):
+lb = labirint(st.lablen, (5, 0))
+for x in range(st.lablen):
+    for y in range(st.lablen):
         if lb[x][y]:
             Block(objs[1], block_image, x, y, 1)
-            if not rr(4):
-                Block(objs[1], block_image, x, y, 2)
-Block(objs[2], block_image, 2, 4, 2)
 xdist, ydist = 0, 0
-k = st.rays * BLS / (2 * math.tan(st.fov))
+k = BLS * 250 / math.tan(st.fov)
 allrects = []
 for i in rects:
     for j in i:
@@ -107,7 +100,8 @@ while run:
         draw(screen, size, height, colour, rayn, drawing_layers)
     for i in range(4):
         if pressed[i]:
-            plr.update(optcos(angle - radians(90 * i)) * tick / 10, optsin(angle - radians(90 * i)) * tick / 10)
+            plr.update(optcos(angle - radians(90 * i + 40)) * tick / 10,
+                       optsin(angle - radians(90 * i + 40)) * tick / 10)
     pg.display.flip()
     vsblocks = [[]] * st.rays
     for i in pg.event.get():

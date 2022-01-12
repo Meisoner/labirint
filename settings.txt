@@ -1,5 +1,6 @@
 floor 0
 fov 70
 rays 500
-raylen 200
+raylen 500
 maxheight 4
+lablen 20
