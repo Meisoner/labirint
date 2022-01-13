@@ -33,7 +33,7 @@ def start_screen():
     font = pygame.font.Font(None, 30)
     text_coord = 50
     for line in intro_text:
-        string_rendered = font.render(line, 1, pygame.Color('white'))
+        string_rendered = font.render(line, 1, pygame.Color(180, 150, 230))
         intro_rect = string_rendered.get_rect()
         text_coord += 10
         intro_rect.top = text_coord
@@ -56,19 +56,19 @@ def start_screen():
 
 
 def endd():
-    intro_text = ["ЖИЛИ БЫЛИ...", "", ""
+    intro_text = ["ЖИЛИ БЫЛИ...", ""
                   "НЕ ДОЖИЛИ..."]
 
     fon = pygame.transform.scale(load_image('конец.jpg'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
     font = pygame.font.Font(None, 50)
-    text_coord = 50
+    text_coord = 30
     for line in intro_text:
         string_rendered = font.render(line, 1, pygame.Color('black'))
         intro_rect = string_rendered.get_rect()
         text_coord += 10
         intro_rect.top = text_coord
-        intro_rect.x = 100
+        intro_rect.x = 120
         text_coord += intro_rect.height
         screen.blit(string_rendered, intro_rect)
 
@@ -89,15 +89,13 @@ def endd():
 
 
 
-
+size = WIDTH, HEIGHT = (1000, 600)
 BLS = 50
-
 
 
 pg.init()
 pg.mouse.set_visible(False)
 run, tobreak = True, False
-size = WIDTH, HEIGHT = (1000, 600)
 screen = pg.display.set_mode(size)
 pg.display.set_caption('lol')
 layers = [pg.Surface(size) for _ in range(st.maxheight)]
@@ -115,7 +113,7 @@ BLSen = 10
 enms = pg.sprite.Group()
 ens_img = pg.Surface((BLSen, BLSen))
 for i in range(ur):
-    Enemy(BLSen, ens_img, enms, kol)
+    enm = Enemy(BLSen, ens_img, enms, kol)
 
 
 
@@ -130,7 +128,7 @@ block_image = pg.Surface((BLS, BLS))
 pg.draw.rect(block_image, (255, 0, 255), (0, 0, BLS, BLS))
 for i in range(2):
     Block(objs[1], block_image, 2, 4 + i, 1)
-    Block(objs[2], block_image, 2, 4, 2)
+Block(objs[2], block_image, 2, 4, 2)
 xdist, ydist = 0, 0
 k = st.rays * BLS / (2 * math.tan(st.fov))
 allrects = []
@@ -147,7 +145,6 @@ while run:
     screen.fill((0, 0, 0))
     pg.draw.rect(screen, (0, 0, 100), ((0, 0), (1000, 300)))
     pc = plr.get_centre()
-    enms.update(10, 10, plrs, objs[1])
     for i in range(st.maxheight):
         layers[i].fill((0, 0, 0))
         pg.draw.rect(layers[i], (0, 0, 100), ((0, 0), (1000, 300)))
@@ -199,7 +196,6 @@ while run:
             dists[rayn] = 0
     for rayn, dist in enumerate(dists):
         t = 1
-
         if not dist:
             continue
         drawing_layers = []
@@ -207,8 +203,8 @@ while run:
             if vsblocks[rayn] in rects[layer]:
                 drawing_layers += [layer]
                 t = 1
-        enms.update(10, 10, plrs, objs[1])
-        for layer in range(len(enemys)):
+
+        for layer in range(st.maxheight):
             if vsblocks[rayn] in enemys[layer]:
                 drawing_layers += [layer]
                 t = 2
@@ -221,11 +217,11 @@ while run:
 
     for i in range(4):
         if pressed[i]:
-            plr.update(optcos(angle - radians(90 * i)) * tick / 10, optsin(angle - radians(90 * i)) * tick / 10, objs[1], enms)
-    for i in enms:
-        i.new_pos()
+            plr.update(optcos(angle - radians(90 * i)) * tick / 20, optsin(angle - radians(90 * i)) * tick / 20, objs[1], enms)
     pg.display.flip()
 
+    for i in enms:
+        i.update(optcos(random.randint(-15, 15)) * tick / 20, optsin(random.randint(-15, 15)) * tick / 20, plrs, objs[1])
 
 
     vsblocks = [[]] * st.rays
@@ -251,4 +247,3 @@ while run:
             elif angle < 0:
                 angle = 2 * PI
             pg.mouse.set_pos(size[0] // 2, size[1] // 2)
-pg.quit()
