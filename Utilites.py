@@ -33,5 +33,14 @@ def draw(screen, size, height, colour, ray, layers):
     x = ray * (size[0] // st.rays), (size[0] // st.rays)
     y = size[1] // 2 + int(height / 2)
     for i in layers:
-        y1 = y + (height - 1) * (i - 1)
+        y1 = y + (height - 1) * i
+        pg.draw.rect(screen, col, (x[0], size[1] - y1, x[1], height))
+
+
+def draw_enemy(screen, size, height, colour, ray):
+    col = (colour, 0, 0)
+    x = ray * (size[0] // st.rays), (size[0] // st.rays)
+    y = size[1] // 2 + int(height / 2)
+    for i in range(2):
+        y1 = y + (height - 1) * i
         pg.draw.rect(screen, col, (x[0], size[1] - y1, x[1], height))

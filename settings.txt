@@ -1,6 +1,7 @@
 floor 0
-fov 70
+fov 80
 rays 500
 raylen 500
 maxheight 4
 lablen 20
+BLS 50

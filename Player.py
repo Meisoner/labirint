@@ -1,11 +1,15 @@
 import pygame as pg
+from Settings import st
+
+
+BLS = st.BLS
 
 
 class Player(pg.sprite.Sprite):
-    def __init__(self, blsize, size, group):
+    def __init__(self, group):
         super().__init__(group)
-        self.image = pg.Surface((blsize, blsize))
-        pg.draw.rect(self.image, (100, 100, 100), (0, 0, 50, 50))
+        self.image = pg.Surface((BLS, BLS))
+        pg.draw.rect(self.image, (100, 100, 100), (0, 0, 20, 20))
         self.rect = self.image.get_rect()
         self.rect.x, self.rect.y = 0, 0
         self.dx = self.dy = 0

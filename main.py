@@ -1,11 +1,12 @@
-import pygame as pg
 from Player import Player
+from Enemy import *
 from Block import *
 from Utilites import *
 from Generator import labirint, rr
 
 
-BLS = 50
+BLS = st.BLS
+ENS = 20
 
 
 pg.init()
@@ -16,8 +17,9 @@ pg.display.set_caption('lol')
 layers = [pg.Surface(size) for _ in range(st.maxheight)]
 objs = [pg.sprite.Group() for _ in range(st.maxheight)]
 dists, vsblocks = [0] * st.rays, [[]] * st.rays
-plrs = pg.sprite.Group()
-plr = Player(BLS, size, plrs)
+endists, vsens = [0] * st.rays, [[]] * st.rays
+plrs, enms = [pg.sprite.Group() for _ in range(2)]
+plr = Player(plrs)
 fov = radians(st.fov)
 step = fov / st.rays
 angle = 0
@@ -26,13 +28,19 @@ pressed = [False] * 4
 keys = [pg.K_w, pg.K_a, pg.K_s, pg.K_d]
 block_image = pg.Surface((BLS, BLS))
 pg.draw.rect(block_image, (255, 0, 255), (0, 0, BLS, BLS))
-lb = labirint(st.lablen, (5, 0))
-for x in range(st.lablen):
-    for y in range(st.lablen):
-        if lb[x][y]:
-            Block(objs[1], block_image, x, y, 1)
+enemy_image = pg.Surface((BLS, BLS))
+pg.draw.rect(enemy_image, (255, 0, 0), (0, 0, BLS, BLS))
+# lb = labirint(st.lablen, (5, 0))
+# for x in range(st.lablen):
+#     for y in range(st.lablen):
+#         if lb[x][y]:
+#             Block(objs[0], block_image, x, y, 0)
+#             Block(objs[1], block_image, x, y, 1)
+Block(objs[0], block_image, 3, 4, 0)
+Block(objs[0], block_image, 4, 4, 0)
+en = Enemy(enms, 1, 2)
 xdist, ydist = 0, 0
-k = BLS * 250 / math.tan(st.fov)
+k = BLS * st.rays / (2 * math.tan(fov / 2))
 allrects = []
 for i in rects:
     for j in i:
@@ -41,6 +49,7 @@ while run:
     tick = clock.tick()
     screen.fill((0, 0, 0))
     pc = plr.get_centre()
+    enms.update(tick / 1000, tick / 2000)
     for i in range(st.maxheight):
         layers[i].fill((0, 0, 0))
         objs[i].draw(layers[i])
@@ -57,13 +66,21 @@ while run:
         sgn = [round(cs / abs(cs)), round(sn / abs(sn))]
         pc2[0] += BLS * ((sgn[0] + 1) // 2)
         pc2[1] += BLS * ((sgn[1] + 1) // 2)
-        xbl, ybl = [], []
+        xbl, ybl, xen, yen = [[] for _ in range(4)]
+        enydist, enxdist = [st.raylen + ENS] * 2
         for _ in range(size[0] // BLS):
             y = pc[1] + (pc2[0] - pc[0]) * tg
             for r in allrects:
                 if r[0] <= pc2[0] <= r[0] + BLS and r[1] <= y <= r[1] + BLS:
                     xbl = r
                     break
+            for r in enemy_rects:
+                if r[0] <= pc2[0] <= r[0] + BLS and r[1] <= y <= r[1] + BLS:
+                    xen = r
+                    print(r)
+                    break
+            if xen and enxdist == st.raylen + ENS:
+                enxdist = (pc2[0] - pc[0]) / cs
             if xbl:
                 xdist = (pc2[0] - pc[0]) / cs
                 break
@@ -75,6 +92,14 @@ while run:
                 if r[0] <= x <= r[0] + BLS and r[1] <= pc2[1] <= r[1] + BLS:
                     ybl = r
                     break
+            for r in enemy_rects:
+                if r[0] <= x <= r[0] + BLS and r[1] <= pc2[1] <= r[1] + BLS:
+                    print(r, pc2, x)
+                    yen = r
+                    print(r)
+                    break
+            if yen and enydist == st.raylen + ENS:
+                enydist = (pc2[1] - pc[1]) / sn
             if ybl:
                 ydist = (pc2[1] - pc[1]) / sn
                 break
@@ -88,6 +113,21 @@ while run:
                 vsblocks[rayn] = ybl
         else:
             dists[rayn] = 0
+        if enxdist != st.raylen + ENS or enydist != st.raylen + ENS:
+            endists[rayn] = min(enxdist, enydist) * optcos(fov / 2 - rayn * step)
+            if enxdist < enydist:
+                vsens[rayn] = xen
+            else:
+                vsens[rayn] = yen
+        else:
+            endists[rayn] = 0
+    for rayn, dist in enumerate(endists):
+        if not dist:
+            continue
+        if vsens[rayn] in enemy_rects:
+            colour = int(120 / (1 + dist * 0.01))
+            height = k / (1.5 * dist)
+            draw_enemy(screen, size, height, colour, rayn)
     for rayn, dist in enumerate(dists):
         if not dist:
             continue
