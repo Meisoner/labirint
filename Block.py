@@ -2,6 +2,7 @@ import pygame as pg
 from Settings import st
 
 
+BLS = st.BLS
 rects = [list() for _ in range(st.maxheight)]
 
 
@@ -10,5 +11,5 @@ class Block(pg.sprite.Sprite):
         super().__init__(group)
         self.image = image
         self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = x * 50, y * 50
-        rects[lnum] += [(x * 50, y * 50)]
+        self.rect.x, self.rect.y = x * BLS, y * BLS
+        rects[lnum] += [(x * BLS, y * BLS)]

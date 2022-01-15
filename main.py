@@ -1,11 +1,12 @@
-import pygame as pg
 from Player import Player
+from Enemy import *
 from Block import *
 from Utilites import *
-from Enemy import *
+from Generator import labirint, rr
 import random
-from Start import *
-
+import os
+import pygame
+import sys
 
 def load_image(name, colorkey=None):
     fullname = os.path.join('', name)
@@ -46,7 +47,6 @@ def start_screen():
     while f:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                terminate()
                 f = False
             elif event.type == pygame.KEYDOWN or \
                     event.type == pygame.MOUSEBUTTONDOWN:
@@ -56,8 +56,8 @@ def start_screen():
 
 
 def endd():
-    intro_text = ["ЖИЛИ БЫЛИ...", ""
-                  "НЕ ДОЖИЛИ..."]
+    intro_text = ["ПОЖИЛИ...", ""
+                  "И ХВАТИТ)))"]
 
     fon = pygame.transform.scale(load_image('конец.jpg'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
@@ -77,7 +77,6 @@ def endd():
     while f:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                terminate()
                 f = False
             elif event.type == pygame.KEYDOWN or \
                     event.type == pygame.MOUSEBUTTONDOWN:
@@ -90,7 +89,9 @@ def endd():
 
 
 size = WIDTH, HEIGHT = (1000, 600)
-BLS = 50
+
+BLS = st.BLS
+ENS = 20
 
 
 pg.init()
@@ -98,59 +99,48 @@ pg.mouse.set_visible(False)
 run, tobreak = True, False
 screen = pg.display.set_mode(size)
 pg.display.set_caption('lol')
+start_screen()
 layers = [pg.Surface(size) for _ in range(st.maxheight)]
 objs = [pg.sprite.Group() for _ in range(st.maxheight)]
 dists, vsblocks = [0] * st.rays, [[]] * st.rays
-plrs = pg.sprite.Group()
-plr = Player(BLS, size, plrs)
-
-
-
-ur = 2
-kol = 1
-teleport = 0
-BLSen = 10
-enms = pg.sprite.Group()
-ens_img = pg.Surface((BLSen, BLSen))
-for i in range(ur):
-    enm = Enemy(BLSen, ens_img, enms, kol)
-
-
-
+endists, vsens = [0] * st.rays, [[]] * st.rays
+plrs, enms = [pg.sprite.Group() for _ in range(2)]
+plr = Player(plrs)
 fov = radians(st.fov)
 step = fov / st.rays
 angle = 0
 clock = pg.time.Clock()
-start_screen()
 pressed = [False] * 4
 keys = [pg.K_w, pg.K_a, pg.K_s, pg.K_d]
 block_image = pg.Surface((BLS, BLS))
 pg.draw.rect(block_image, (255, 0, 255), (0, 0, BLS, BLS))
-for i in range(2):
-    Block(objs[1], block_image, 2, 4 + i, 1)
-Block(objs[2], block_image, 2, 4, 2)
+enemy_image = pg.Surface((BLS, BLS))
+pg.draw.rect(enemy_image, (255, 0, 0), (0, 0, BLS, BLS))
+# lb = labirint(st.lablen, (5, 0))
+# for x in range(st.lablen):
+#     for y in range(st.lablen):
+#         if lb[x][y]:
+#             Block(objs[0], block_image, x, y, 0)
+#             Block(objs[1], block_image, x, y, 1)
+Block(objs[0], block_image, 3, 4, 0)
+Block(objs[0], block_image, 4, 4, 0)
+en = Enemy(enms, 1, 2)
 xdist, ydist = 0, 0
-k = st.rays * BLS / (2 * math.tan(st.fov))
+k = BLS * st.rays / (2 * math.tan(fov / 2))
 allrects = []
 for i in rects:
     for j in i:
         allrects += [j]
-
-for i in enemys:
-    for j in i:
-        allrects += [j]
-
 while run:
     tick = clock.tick()
     screen.fill((0, 0, 0))
-    pg.draw.rect(screen, (0, 0, 100), ((0, 0), (1000, 300)))
+    pg.draw.rect(screen, (80, 0, 50), ((0, 0), (1000, 300)))
     pc = plr.get_centre()
+    enms.update(random.randint(-10, 10), random.randint(-10, 10))
     for i in range(st.maxheight):
         layers[i].fill((0, 0, 0))
-        pg.draw.rect(layers[i], (0, 0, 100), ((0, 0), (1000, 300)))
         objs[i].draw(layers[i])
         plrs.draw(layers[i])
-        enms.draw(layers[i])
     for rayn in range(st.rays):
         sn = optsin(angle - fov + rayn * step)
         if not sn:
@@ -163,13 +153,21 @@ while run:
         sgn = [round(cs / abs(cs)), round(sn / abs(sn))]
         pc2[0] += BLS * ((sgn[0] + 1) // 2)
         pc2[1] += BLS * ((sgn[1] + 1) // 2)
-        xbl, ybl = [], []
+        xbl, ybl, xen, yen = [[] for _ in range(4)]
+        enydist, enxdist = [st.raylen + ENS] * 2
         for _ in range(size[0] // BLS):
             y = pc[1] + (pc2[0] - pc[0]) * tg
             for r in allrects:
                 if r[0] <= pc2[0] <= r[0] + BLS and r[1] <= y <= r[1] + BLS:
                     xbl = r
                     break
+            for r in enemy_rects:
+                if r[0] <= pc2[0] <= r[0] + BLS and r[1] <= y <= r[1] + BLS:
+                    xen = r
+                    print(r)
+                    break
+            if xen and enxdist == st.raylen + ENS:
+                enxdist = (pc2[0] - pc[0]) / cs
             if xbl:
                 xdist = (pc2[0] - pc[0]) / cs
                 break
@@ -181,49 +179,57 @@ while run:
                 if r[0] <= x <= r[0] + BLS and r[1] <= pc2[1] <= r[1] + BLS:
                     ybl = r
                     break
+            for r in enemy_rects:
+                if r[0] <= x <= r[0] + BLS and r[1] <= pc2[1] <= r[1] + BLS:
+                    print(r, pc2, x)
+                    yen = r
+                    print(r)
+                    break
+            if yen and enydist == st.raylen + ENS:
+                enydist = (pc2[1] - pc[1]) / sn
             if ybl:
                 ydist = (pc2[1] - pc[1]) / sn
                 break
             ydist = st.raylen + BLS
             pc2[1] += sgn[1] * BLS
         if xdist != st.raylen + BLS or ydist != st.raylen + BLS:
-            dists[rayn] = abs(round(min(xdist, ydist) * optcos(fov - rayn * step)))
+            dists[rayn] = min(xdist, ydist) * optcos(fov / 2 - rayn * step)
             if xdist < ydist:
                 vsblocks[rayn] = xbl
             else:
                 vsblocks[rayn] = ybl
         else:
             dists[rayn] = 0
+        if enxdist != st.raylen + ENS or enydist != st.raylen + ENS:
+            endists[rayn] = min(enxdist, enydist) * optcos(fov / 2 - rayn * step)
+            if enxdist < enydist:
+                vsens[rayn] = xen
+            else:
+                vsens[rayn] = yen
+        else:
+            endists[rayn] = 0
+    for rayn, dist in enumerate(endists):
+        if not dist:
+            continue
+        if vsens[rayn] in enemy_rects:
+            colour = int(120 / (1 + dist * 0.01))
+            height = k / (1.5 * dist)
+            draw_enemy(screen, size, height, colour, rayn)
     for rayn, dist in enumerate(dists):
-        t = 1
         if not dist:
             continue
         drawing_layers = []
         for layer in range(st.maxheight):
             if vsblocks[rayn] in rects[layer]:
                 drawing_layers += [layer]
-                t = 1
-
-        for layer in range(st.maxheight):
-            if vsblocks[rayn] in enemys[layer]:
-                drawing_layers += [layer]
-                t = 2
-
-
-
         colour = int(255 / (1 + dist * 0.01))
         height = k / dist
-        draw(screen, size, height, colour, rayn, drawing_layers, t)
-
+        draw(screen, size, height, colour, rayn, drawing_layers)
     for i in range(4):
         if pressed[i]:
-            plr.update(optcos(angle - radians(90 * i)) * tick / 20, optsin(angle - radians(90 * i)) * tick / 20, objs[1], enms)
+            plr.update(optcos(angle - radians(90 * i + 40)) * tick / 10,
+                       optsin(angle - radians(90 * i + 40)) * tick / 10)
     pg.display.flip()
-
-    for i in enms:
-        i.update(optcos(random.randint(-15, 15)) * tick / 20, optsin(random.randint(-15, 15)) * tick / 20, plrs, objs[1])
-
-
     vsblocks = [[]] * st.rays
     for i in pg.event.get():
         if i.type == pg.QUIT:
