@@ -54,3 +54,6 @@ class Enemy(pg.sprite.Sprite):
     def attack(self, damage):
         self.hp -= damage
         return self.hp
+
+    def terminate(self):
+        enemy_rects[self.num] = ()
