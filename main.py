@@ -2,7 +2,7 @@ from Player import Player
 from Enemy import *
 from Block import *
 from Utilites import *
-from Generator import labirint, rr
+from Generator import labirint
 
 
 BLS = st.BLS
@@ -38,7 +38,7 @@ for x in range(st.lablen):
             Block(objs[1], block_image, x, y, 1)
 # Block(objs[0], block_image, 3, 4, 0)
 # Block(objs[0], block_image, 4, 4, 0)
-# en = Enemy(enms, 1, 2)
+en = Enemy(enms, 1, 2)
 xdist, ydist = 0, 0
 k = BLS * st.rays / (2 * math.tan(fov / 2))
 allrects = set(rects[0])
@@ -46,7 +46,8 @@ while run:
     tick = clock.tick()
     screen.fill((0, 0, 0))
     pc = plr.get_centre()
-#    enms.update(tick / 1000, tick / 2000)
+    enms.update(tick / 1000, tick / 2000)
+    enemyset = set(enemy_rects)
 #    for i in range(st.maxheight):
 #        layers[i].fill((0, 0, 0))
 #        objs[i].draw(layers[i])
@@ -68,7 +69,7 @@ while run:
         pc2[0] += BLS * ((sgn[0] + 1) // 2)
         pc2[1] += BLS * ((sgn[1] + 1) // 2)
 #        xbl, ybl, xen, yen = [[] for _ in range(4)]
-#        enydist, enxdist = [st.raylen + ENS] * 2
+        enydist, enxdist = st.raylen + ENS, st.raylen + ENS
         tobreak = False
         for _ in range(size[0] // BLS):
             y = pc[1] + (pc2[0] - pc[0]) * tg
@@ -79,10 +80,8 @@ while run:
                 xdist = (pc2[0] - pc[0]) / cs
                 break
 #            for r in enemy_rects:
-#                if r[0] <= pc2[0] <= r[0] + BLS and r[1] <= y <= r[1] + BLS:
-#                    xen = r
-#                    print(r)
-#                    break
+            if (x - x % ENS, y - y % ENS) in enemyset:
+                enxdist = (pc2[0] - pc[0]) / cs
 #            if xen and enxdist == st.raylen + ENS:
 #                enxdist = (pc2[0] - pc[0]) / cs
             if tobreak:
@@ -98,6 +97,8 @@ while run:
                 tobreak = True
                 ydist = (pc2[1] - pc[1]) / sn
                 break
+            if (x - x % ENS, y - y % ENS) in enemyset:
+                enydist = (pc2[1] - pc[1]) / sn
 #            for r in enemy_rects:
 #                if r[0] <= x <= r[0] + BLS and r[1] <= pc2[1] <= r[1] + BLS:
 #                    print(r, pc2, x)
@@ -112,9 +113,17 @@ while run:
             pc2[1] += sgn[1] * BLS
         if xdist != st.raylen + BLS or ydist != st.raylen + BLS:
             final = min(xdist, ydist) * optcos(fov / 2 - rayn * step)
-            colour = int(255 / (1 + final * 0.01))
-            height = k / final
-            draw(screen, size, height, colour, rayn)
+            if final:
+                colour = int(255 / (1 + final * 0.01))
+                height = k / final
+                draw(screen, size, height, colour, rayn)
+        print(enxdist, enydist)
+        if enxdist != st.raylen + ENS or enydist != st.raylen + ENS:
+            enfinal = min(enxdist, enydist) * optcos(fov / 2 - rayn * step)
+            if enfinal:
+                colour = int(120 / (1 + enfinal * 0.01))
+                height = k / (1.5 * enfinal)
+                draw_enemy(screen, size, height, colour, rayn)
 #        if enxdist != st.raylen + ENS or enydist != st.raylen + ENS:
 #            endists[rayn] = min(enxdist, enydist) * optcos(fov / 2 - rayn * step)
 #            if enxdist < enydist:
