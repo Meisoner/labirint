@@ -45,12 +45,11 @@ allrects = []
 for i in rects:
     for j in i:
         allrects += [j]
-screen_middle = (size[0] // 2, size[1] // 2)
 while run:
     tick = clock.tick()
     screen.fill((0, 0, 0))
     pc = plr.get_centre()
-    enms.update(tick / 1000, tick / 2000)
+#    enms.update(tick / 1000, tick / 2000)
 #    for i in range(st.maxheight):
 #        layers[i].fill((0, 0, 0))
 #        objs[i].draw(layers[i])
@@ -63,7 +62,7 @@ while run:
         if not cs:
             cs = 10 ** -5
         tg = sn / cs
-        pc2 = [BLS - BLS % i for i in pc]
+        pc2 = [(i // BLS) * BLS for i in pc]
         sgn = [1, 1]
         if cs < 0:
             sgn[0] = -1
@@ -71,84 +70,83 @@ while run:
             sgn[1] = -1
         pc2[0] += BLS * ((sgn[0] + 1) // 2)
         pc2[1] += BLS * ((sgn[1] + 1) // 2)
-        xbl, ybl, xen, yen = [[] for _ in range(4)]
-        enydist, enxdist = [st.raylen + ENS] * 2
+#        xbl, ybl, xen, yen = [[] for _ in range(4)]
+#        enydist, enxdist = [st.raylen + ENS] * 2
+        tobreak = False
         for _ in range(size[0] // BLS):
             y = pc[1] + (pc2[0] - pc[0]) * tg
-            for r in allrects:
-                if r[0] <= pc2[0] <= r[0] + BLS and r[1] <= y <= r[1] + BLS:
-                    xbl = r
-                    break
-            for r in enemy_rects:
-                if r[0] <= pc2[0] <= r[0] + BLS and r[1] <= y <= r[1] + BLS:
-                    xen = r
-                    break
-            if xen and enxdist == st.raylen + ENS:
-                enxdist = (pc2[0] - pc[0]) / cs
-            if xbl:
+            x = pc2[0] + sgn[0]
+            if (x - x % BLS, y - y % BLS) in allrects:
+#                    <= r[0] + BLS and r[1] <= y <= r[1] + BLS:
+                tobreak = True
                 xdist = (pc2[0] - pc[0]) / cs
+                break
+#            for r in enemy_rects:
+#                if r[0] <= pc2[0] <= r[0] + BLS and r[1] <= y <= r[1] + BLS:
+#                    xen = r
+#                    print(r)
+#                    break
+#            if xen and enxdist == st.raylen + ENS:
+#                enxdist = (pc2[0] - pc[0]) / cs
+            if tobreak:
                 break
             xdist = st.raylen + BLS
             pc2[0] += sgn[0] * BLS
+        tobreak = False
         for _ in range(size[1] // BLS):
             x = pc[0] + (pc2[1] - pc[1]) / tg
-            for r in allrects:
-                if r[0] <= x <= r[0] + BLS and r[1] <= pc2[1] <= r[1] + BLS:
-                    ybl = r
-                    break
-            for r in enemy_rects:
-                if r[0] <= x <= r[0] + BLS and r[1] <= pc2[1] <= r[1] + BLS:
-#                    print(r, pc2, x)
-                    yen = r
-                    break
-            if yen and enydist == st.raylen + ENS:
-                enydist = (pc2[1] - pc[1]) / sn
-            if ybl:
+            y = pc2[1] + sgn[1]
+            if (x - x % BLS, y - y % BLS) in allrects:
+#                r[0] <= x <= r[0] + BLS and r[1] <= pc2[1] <= r[1] + BLS:
+                tobreak = True
                 ydist = (pc2[1] - pc[1]) / sn
+                break
+#            for r in enemy_rects:
+#                if r[0] <= x <= r[0] + BLS and r[1] <= pc2[1] <= r[1] + BLS:
+#                    print(r, pc2, x)
+#                    yen = r
+#                    print(r)
+#                    break
+#            if yen and enydist == st.raylen + ENS:
+#                enydist = (pc2[1] - pc[1]) / sn
+            if tobreak:
                 break
             ydist = st.raylen + BLS
             pc2[1] += sgn[1] * BLS
         if xdist != st.raylen + BLS or ydist != st.raylen + BLS:
-            dists[rayn] = min(xdist, ydist) * optcos(fov / 2 - rayn * step)
-            if xdist < ydist:
-                vsblocks[rayn] = xbl
-            else:
-                vsblocks[rayn] = ybl
-        else:
-            dists[rayn] = 0
-        if enxdist != st.raylen + ENS or enydist != st.raylen + ENS:
-            endists[rayn] = min(enxdist, enydist) * optcos(fov / 2 - rayn * step)
-            if enxdist < enydist:
-                vsens[rayn] = xen
-            else:
-                vsens[rayn] = yen
-        else:
-            endists[rayn] = 0
-    for rayn, dist in enumerate(endists):
-        if not dist:
-            continue
-        if vsens[rayn] in enemy_rects:
-            colour = int(120 / (1 + dist * 0.01))
-            height = k / (1.5 * dist)
-            draw_enemy(screen, size, height, colour, rayn)
-    for rayn, dist in enumerate(dists):
-        if not dist:
-            continue
-        drawing_layers = []
-        for layer in range(st.maxheight):
-            if vsblocks[rayn] in rects[layer]:
-                drawing_layers += [layer]
-        colour = int(255 / (1 + dist * 0.01))
-        height = k / dist
-        draw(screen, size, height, colour, rayn, drawing_layers)
+            final = min(xdist, ydist) * optcos(fov / 2 - rayn * step)
+            colour = int(255 / (1 + final * 0.01))
+            height = k / final
+            draw(screen, size, height, colour, rayn)
+#        if enxdist != st.raylen + ENS or enydist != st.raylen + ENS:
+#            endists[rayn] = min(enxdist, enydist) * optcos(fov / 2 - rayn * step)
+#            if enxdist < enydist:
+#                vsens[rayn] = xen
+#            else:
+#                vsens[rayn] = yen
+#        else:
+#            endists[rayn] = 0
+#    for rayn, dist in enumerate(endists):
+#        if not dist:
+#            continue
+#        if vsens[rayn] in enemy_rects:
+#            colour = int(120 / (1 + dist * 0.01))
+#            height = k / (1.5 * dist)
+#            draw_enemy(screen, size, height, colour, rayn)
+#    for rayn, dist in enumerate(dists):
+#        if not dist:
+#            continue
+#        drawing_layers = []
+#        for layer in range(st.maxheight):
+#            if vsblocks[rayn] in rects[layer]:
+#                drawing_layers += [layer]
+#        colour = int(255 / (1 + dist * 0.01))
+#        height = k / dist
     for i in range(4):
         if pressed[i]:
             plr.update(optcos(angle - radians(90 * i + 40)) * tick / 10,
                        optsin(angle - radians(90 * i + 40)) * tick / 10)
-    pg.draw.rect(screen, (0, 255, 0), (screen_middle[0] - 10, screen_middle[1] - 6, 10, 2))
-    pg.draw.rect(screen, (0, 255, 0), (screen_middle[0] - 6, screen_middle[1] - 10, 2, 10))
     pg.display.flip()
-    vsblocks = [[]] * st.rays
     for i in pg.event.get():
         if i.type == pg.QUIT:
             run = False

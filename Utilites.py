@@ -28,13 +28,11 @@ def optcos(x):
     return coses[rx]
 
 
-def draw(screen, size, height, colour, ray, layers):
+def draw(screen, size, height, colour, ray):
     col = (colour, colour, colour)
     x = ray * (size[0] // st.rays), (size[0] // st.rays)
     y = size[1] // 2 + int(height / 2)
-    for i in layers:
-        y1 = y + (height - 1) * i
-        pg.draw.rect(screen, col, (x[0], size[1] - y1, x[1], height))
+    pg.draw.rect(screen, col, (x[0], size[1] - y, x[1], height))
 
 
 def draw_enemy(screen, size, height, colour, ray):
