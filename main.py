@@ -41,10 +41,7 @@ for x in range(st.lablen):
 # en = Enemy(enms, 1, 2)
 xdist, ydist = 0, 0
 k = BLS * st.rays / (2 * math.tan(fov / 2))
-allrects = []
-for i in rects:
-    for j in i:
-        allrects += [j]
+allrects = set(rects[0])
 while run:
     tick = clock.tick()
     screen.fill((0, 0, 0))
