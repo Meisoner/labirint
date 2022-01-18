@@ -42,12 +42,15 @@ en = Enemy(enms, 1, 2)
 xdist, ydist = 0, 0
 k = BLS * st.rays / (2 * math.tan(fov / 2))
 allrects = set(rects[0])
+midray, can_attack, monster_drawn = st.rays // 2, False, False
+monster, xm, ym, fm = [False] * 4
 while run:
     tick = clock.tick()
     screen.fill((0, 0, 0))
     pc = plr.get_centre()
     enms.update(tick / 1000, tick / 2000)
     enemyset = set(enemy_rects)
+    print(enemy_rects)
 #    for i in range(st.maxheight):
 #        layers[i].fill((0, 0, 0))
 #        objs[i].draw(layers[i])
@@ -68,22 +71,24 @@ while run:
             sgn[1] = -1
         pc2[0] += BLS * ((sgn[0] + 1) // 2)
         pc2[1] += BLS * ((sgn[1] + 1) // 2)
-#        xbl, ybl, xen, yen = [[] for _ in range(4)]
+        xbl, ybl, xen, yen = [[] for _ in range(4)]
         enydist, enxdist = st.raylen + ENS, st.raylen + ENS
         tobreak = False
         for _ in range(size[0] // BLS):
             y = pc[1] + (pc2[0] - pc[0]) * tg
             x = pc2[0] + sgn[0]
             if (x - x % BLS, y - y % BLS) in allrects:
-#                    <= r[0] + BLS and r[1] <= y <= r[1] + BLS:
                 tobreak = True
                 xdist = (pc2[0] - pc[0]) / cs
                 break
-#            for r in enemy_rects:
-            if (x - x % ENS, y - y % ENS) in enemyset:
-                enxdist = (pc2[0] - pc[0]) / cs
-#            if xen and enxdist == st.raylen + ENS:
-#                enxdist = (pc2[0] - pc[0]) / cs
+            for r in enemyset:
+                if not r:
+                    continue
+                if r[0] <= x <= r[0] + BLS and r[1] <= y <= r[1] + BLS:
+#                    print(r, pc2, x)
+                    enxdist = (pc2[0] - pc[0]) / cs
+                    xm = r
+                    break
             if tobreak:
                 break
             xdist = st.raylen + BLS
@@ -93,20 +98,16 @@ while run:
             x = pc[0] + (pc2[1] - pc[1]) / tg
             y = pc2[1] + sgn[1]
             if (x - x % BLS, y - y % BLS) in allrects:
-#                r[0] <= x <= r[0] + BLS and r[1] <= pc2[1] <= r[1] + BLS:
                 tobreak = True
                 ydist = (pc2[1] - pc[1]) / sn
                 break
-            if (x - x % ENS, y - y % ENS) in enemyset:
-                enydist = (pc2[1] - pc[1]) / sn
-#            for r in enemy_rects:
-#                if r[0] <= x <= r[0] + BLS and r[1] <= pc2[1] <= r[1] + BLS:
-#                    print(r, pc2, x)
-#                    yen = r
-#                    print(r)
-#                    break
-#            if yen and enydist == st.raylen + ENS:
-#                enydist = (pc2[1] - pc[1]) / sn
+            for r in enemyset:
+                if not r:
+                    continue
+                if r[0] <= x <= r[0] + BLS and r[1] <= y <= r[1] + BLS:
+                    enydist = (pc2[1] - pc[1]) / sn
+                    ym = r
+                    break
             if tobreak:
                 break
             ydist = st.raylen + BLS
@@ -117,13 +118,18 @@ while run:
                 colour = int(255 / (1 + final * 0.01))
                 height = k / final
                 draw(screen, size, height, colour, rayn)
-        print(enxdist, enydist)
         if enxdist != st.raylen + ENS or enydist != st.raylen + ENS:
             enfinal = min(enxdist, enydist) * optcos(fov / 2 - rayn * step)
             if enfinal:
                 colour = int(120 / (1 + enfinal * 0.01))
                 height = k / (1.5 * enfinal)
                 draw_enemy(screen, size, height, colour, rayn)
+                if rayn == midray and enfinal <= 100:
+                    if enxdist < enydist:
+                        fm = xm
+                    else:
+                        fm = ym
+                    monster_drawn = True
 #        if enxdist != st.raylen + ENS or enydist != st.raylen + ENS:
 #            endists[rayn] = min(enxdist, enydist) * optcos(fov / 2 - rayn * step)
 #            if enxdist < enydist:
@@ -148,6 +154,11 @@ while run:
 #                drawing_layers += [layer]
 #        colour = int(255 / (1 + dist * 0.01))
 #        height = k / dist
+    if monster_drawn:
+        can_attack = True
+        monster_drawn = False
+    else:
+        can_attack = False
     for i in range(4):
         if pressed[i]:
             plr.update(optcos(angle - radians(90 * i + 40)) * tick / 10,
@@ -174,3 +185,7 @@ while run:
             elif angle < 0:
                 angle = 2 * PI
             pg.mouse.set_pos(size[0] // 2, size[1] // 2)
+        elif i.type == pg.MOUSEBUTTONDOWN:
+            if can_attack:
+                print(enemy_rects.index(fm))
+                enemies[enemy_rects.index(fm)].terminate()
