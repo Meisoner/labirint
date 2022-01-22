@@ -22,7 +22,7 @@ endists, vsens = [0] * st.rays, [[]] * st.rays
 plrs, enms = [pg.sprite.Group() for _ in range(2)]
 layer = pg.Surface(size)
 plr = Player(plrs)
-fov = radians(st.fov)
+fov = origfov = radians(st.fov)
 step = fov / st.rays
 angle = 0
 clock = pg.time.Clock()
@@ -32,7 +32,7 @@ block_image = pg.Surface((BLS, BLS))
 pg.draw.rect(block_image, (255, 0, 255), (0, 0, BLS, BLS))
 enemy_image = pg.Surface((BLS, BLS))
 pg.draw.rect(enemy_image, (255, 0, 0), (0, 0, BLS, BLS))
-lb = labirint(st.lablen, (5, 0))
+lb = labirint(st.lablen, (1, 0))
 for x in range(st.lablen):
     for y in range(st.lablen):
         if lb[x][y]:
@@ -45,9 +45,12 @@ allrects = set(rects)
 midray, can_attack, monster_drawn = st.rays // 2, False, False
 monster, xm, ym, fm = [False] * 4
 background = pg.transform.scale(pg.image.load('BG.png'), size)
+speed, df = 10, 0
+da0, da1 = 0, 0
 while run:
     tick = clock.tick()
     screen.blit(background, (0, 0))
+    pg.draw.rect(screen, (50, 30, 0), (0, size[1] - 300, size[0], 300), 0)
     pc = plr.get_centre()
     enemyset = set(enemy_rects)
     layer.fill((0, 0, 0))
@@ -78,6 +81,7 @@ while run:
             if (x - x % BLS, y - y % BLS) in allrects:
                 tobreak = True
                 xdist = (pc2[0] - pc[0]) / cs
+                da0 = pc[1] + xdist * sn
                 break
             for r in enemyset:
                 if not r:
@@ -97,6 +101,7 @@ while run:
             if (x - x % BLS, y - y % BLS) in allrects:
                 tobreak = True
                 ydist = (pc2[1] - pc[1]) / sn
+                da1 = pc[0] + ydist * cs
                 break
             for r in enemyset:
                 if not r:
@@ -114,9 +119,9 @@ while run:
             if final:
                 height = k / final
                 if xdist < ydist:
-                    this_texture = texture.get(pc[1] + final * sn, height)
+                    this_texture = texture.get(da0, height)
                 else:
-                    this_texture = texture.get(pc[0] + final * cs, height)
+                    this_texture = texture.get(da1, height)
                 draw(screen, size, height, rayn, this_texture)
         if enxdist != st.raylen + ENS or enydist != st.raylen + ENS:
             enfinal = min(enxdist, enydist) * optcos(fov / 2 - rayn * step)
@@ -137,8 +142,8 @@ while run:
         can_attack = False
     for i in range(4):
         if pressed[i]:
-            plr.update(optcos(angle - radians(90 * i + 40)) * tick / 10,
-                       optsin(angle - radians(90 * i + 40)) * tick / 10, objs)
+            plr.update(optcos(angle - radians(90 * i + 40)) * tick / speed,
+                       optsin(angle - radians(90 * i + 40)) * tick / speed, objs)
     pg.display.flip()
     for i in pg.event.get():
         if i.type == pg.QUIT:
@@ -146,14 +151,21 @@ while run:
         elif i.type == pg.KEYDOWN:
             if i.key == pg.K_ESCAPE:
                 run = False
+            elif i.key == pg.K_LCTRL:
+                speed -= 5
+                df = 10
             else:
                 for key in range(4):
                     if i.key == keys[key]:
                         pressed[key] = True
         elif i.type == pg.KEYUP:
-            for key in range(4):
-                if i.key == keys[key]:
-                    pressed[key] = False
+            if i.key == pg.K_LCTRL:
+                speed += 5
+                df = -10
+            else:
+                for key in range(4):
+                    if i.key == keys[key]:
+                        pressed[key] = False
         elif i.type == pg.MOUSEMOTION:
             angle += radians(i.pos[0] - size[0] // 2) / 2
             if angle >= 2 * PI:
@@ -164,3 +176,13 @@ while run:
         elif i.type == pg.MOUSEBUTTONDOWN:
             if can_attack:
                 enemies[enemy_rects.index(fm)].terminate()
+    if df > 0:
+        df -= tick / 20
+        fov = origfov + radians(10 - int(df))
+        if df < 1:
+            df = 0
+    elif df < 0:
+        df += tick / 20
+        fov = origfov + radians(-1 * int(df))
+        if df > -1:
+            df = 0
