@@ -40,6 +40,7 @@ def prototype(size, startpos):
         napr = 1
     else:
         return
+    rzv = []
     while True:
         res[x][y] = 0
         if napr == 1:
@@ -54,22 +55,18 @@ def prototype(size, startpos):
             napr = 1 - int(bool(napr))
             if napr and not rr(4):
                 napr += 1
-    for i in range(200):
-        res[rr(size - 2)][rr(size - 2)] = 0
-#    goal = [x, y, 1, rr(1, 4)]
-#    k = 1
-#    while goal:
-#        x, y = goal[0], goal[1]
-#        for i in range(goal[3]):
-#            x += int(goal[2] < 2) * (2 * goal[2] - 1)
-#            y += int(goal[2] > 1) * (2 * goal[2] - 5)
-#            res[y][x] = 0
-#        if k <= 50:
-#            dists = [x, size - x - 1, y, size - y - 1]
-#            for j in optimals(x, y, dists):
-#                goal += [x, y, j[0], j[1]]
-#            k += 1
-#        goal = goal[4:]
+            if napr:
+                rzv += [(x, y, 3 - napr)]
+    for i in rzv:
+        x, y = i[0], i[1]
+        napr = i[2]
+        if 7 < x < size - 7:
+            for i in range(rr(2, 5)):
+                if napr == 1:
+                    x += 1
+                else:
+                    x -= 1
+                res[x][y] = 0
     return filtr(startpos, res)
 
 
@@ -84,4 +81,5 @@ def labirint(size, startpos):
     return res
 
 
-labirint(100, (0, 5))
+if __name__ == '__main__':
+    labirint(100, (5, 0))
