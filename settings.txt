@@ -1,7 +1,5 @@
-floor 0
 fov 80
 rays 500
-raylen 500
-maxheight 4
-lablen 20
+raylen 1000
+lablen 100
 BLS 50

@@ -2,11 +2,13 @@ from Player import Player
 from Enemy import *
 from Block import *
 from Utilites import *
-from Generator import labirint, rr
-import random
+from Generator import labirint
+from Texture import Texture
+
 import os
 import pygame
 import sys
+
 
 def load_image(name, colorkey=None):
     fullname = os.path.join('', name)
@@ -57,9 +59,9 @@ def start_screen():
 
 def endd():
     intro_text = ["ПОЖИЛИ...", ""
-                  "И ХВАТИТ)))"]
+                               "И ХВАТИТ)))"]
 
-    fon = pygame.transform.scale(load_image('конец.jpg'), (WIDTH, HEIGHT))
+    fon = pygame.transform.scale(load_image('end.jpg'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
     font = pygame.font.Font(None, 50)
     text_coord = 30
@@ -85,31 +87,27 @@ def endd():
         pygame.display.flip()
 
 
-
-
-
 size = WIDTH, HEIGHT = (1000, 600)
 
 BLS = st.BLS
 ENS = 20
 
-
 pg.init()
+screen = pg.display.set_mode(size)
+texture = Texture('txtr.png', 1000)
 pg.mouse.set_visible(False)
 run, tobreak = True, False
-screen = pg.display.set_mode(size)
 pg.display.set_caption('lol')
 start_screen()
-layers = [pg.Surface(size) for _ in range(st.maxheight)]
-objs = [pg.sprite.Group() for _ in range(st.maxheight)]
+objs = pg.sprite.Group()
 dists, vsblocks = [0] * st.rays, [[]] * st.rays
 endists, vsens = [0] * st.rays, [[]] * st.rays
 plrs, enms = [pg.sprite.Group() for _ in range(2)]
+layer = pg.Surface(size)
 plr = Player(plrs)
-fov = radians(st.fov)
+fov = origfov = radians(st.fov)
 step = fov / st.rays
 angle = 0
-midray = st.rays // 2
 clock = pg.time.Clock()
 pressed = [False] * 4
 keys = [pg.K_w, pg.K_a, pg.K_s, pg.K_d]
@@ -117,40 +115,36 @@ block_image = pg.Surface((BLS, BLS))
 pg.draw.rect(block_image, (255, 0, 255), (0, 0, BLS, BLS))
 enemy_image = pg.Surface((BLS, BLS))
 pg.draw.rect(enemy_image, (255, 0, 0), (0, 0, BLS, BLS))
-lb = labirint(st.lablen, (5, 0))
-# for x in range(st.lablen):
-#     for y in range(st.lablen):
-#         if lb[x][y]:
-#             Block(objs[0], block_image, x, y, 0)
-#             Block(objs[1], block_image, x, y, 1)
-Block(objs[0], block_image, 3, 4, 0)
-Block(objs[0], block_image, 4, 4, 0)
-en = Enemy(enms, random.randint(0, 5), random.randint(0, 5))
+lb = labirint(st.lablen, (1, 0))
+for x in range(st.lablen):
+    for y in range(st.lablen):
+        if lb[x][y]:
+            Block(objs, block_image, x + 1, y + 1)
+dopblocks = [(3, 0), (3, -1), (3, -2), (2, -2), (1, -2), (1, 0), (1, -1)]
+for x, y in dopblocks:
+    Block(objs, block_image, x, y)
 xdist, ydist = 0, 0
 k = BLS * st.rays / (2 * math.tan(fov / 2))
-allrects = []
-hits = pg.sprite.Group()
-hit = pygame.sprite.Sprite()
-hit.image = pg.Surface((ENS, ENS))
-pg.draw.rect(hit.image, (0, 255, 0), (490, 290, 20, 20))
-hit.rect = hit.image.get_rect()
-hits.add(hit)
-for i in rects:
-    for j in i:
-        allrects += [j]
+allrects = set(rects)
+midray, can_attack, monster_drawn = st.rays // 2, False, False
+monster, xm, ym, fm = [False] * 4
+background = pg.transform.scale(pg.image.load('BG.png'), size)
+speed, df = 10, 0
+da0, da1 = 0, 0
+yangle = PI
+level = 1
+spectexture, speccoord = Texture('txtr.png', 1000, 'Вход ->\nУровень 1'), (3, 1)
+blockx, blocky = (0, 0), (0, 0)
+pg.mouse.set_pos(size[0] // 2, size[1] // 2)
 while run:
     tick = clock.tick()
-    screen.fill((0, 0, 0))
-    pg.draw.rect(screen, (80, 0, 50), ((0, 0), (1000, 300)))
+    screen.blit(background, (0, 0))
+    draw_floor(screen, size, yangle)
     pc = plr.get_centre()
-    enms.update(random.randint(-3, 3), random.randint(-3, 3), objs[0], objs[1], plrs)
-    for i in enms:
-        if hit.rect in enemy_rects:
-            i.attack(20)
-    for i in range(st.maxheight):
-        layers[i].fill((0, 0, 0))
-        objs[i].draw(layers[i])
-        plrs.draw(layers[i])
+    enemyset = set(enemy_rects)
+    layer.fill((0, 0, 0))
+    objs.draw(layer)
+    plrs.draw(layer)
     for rayn in range(st.rays):
         sn = optsin(angle - fov + rayn * step)
         if not sn:
@@ -160,95 +154,97 @@ while run:
             cs = 10 ** -5
         tg = sn / cs
         pc2 = [(i // BLS) * BLS for i in pc]
-        sgn = [round(cs / abs(cs)), round(sn / abs(sn))]
+        sgn = [1, 1]
+        if cs < 0:
+            sgn[0] = -1
+        if sn < 0:
+            sgn[1] = -1
         pc2[0] += BLS * ((sgn[0] + 1) // 2)
         pc2[1] += BLS * ((sgn[1] + 1) // 2)
         xbl, ybl, xen, yen = [[] for _ in range(4)]
-        enydist, enxdist = [st.raylen + ENS] * 2
+        enydist, enxdist = st.raylen + ENS, st.raylen + ENS
+        tobreak = False
         for _ in range(size[0] // BLS):
             y = pc[1] + (pc2[0] - pc[0]) * tg
-            for r in allrects:
-                if r[0] <= pc2[0] <= r[0] + BLS and r[1] <= y <= r[1] + BLS:
-                    xbl = r
-                    break
-            for r in enemy_rects:
-                if r[0] <= pc2[0] <= r[0] + BLS and r[1] <= y <= r[1] + BLS:
-                    xen = r
-                    break
-            if xen and enxdist == st.raylen + ENS:
-                enxdist = (pc2[0] - pc[0]) / cs
-            if xbl:
+            x = pc2[0] + sgn[0]
+            if (x - x % BLS, y - y % BLS) in allrects:
+                tobreak = True
                 xdist = (pc2[0] - pc[0]) / cs
+                da0 = pc[1] + xdist * sn
+                blockx = int(x / BLS), int(da0 / BLS)
+                break
+            for r in enemyset:
+                if not r:
+                    continue
+                if r[0] <= x <= r[0] + BLS and r[1] <= y <= r[1] + BLS:
+                    enxdist = (pc2[0] - pc[0]) / cs
+                    xm = r
+                    break
+            if tobreak:
                 break
             xdist = st.raylen + BLS
             pc2[0] += sgn[0] * BLS
+        tobreak = False
         for _ in range(size[1] // BLS):
             x = pc[0] + (pc2[1] - pc[1]) / tg
-            for r in allrects:
-                if r[0] <= x <= r[0] + BLS and r[1] <= pc2[1] <= r[1] + BLS:
-                    ybl = r
-                    break
-            for r in enemy_rects:
-                if r[0] <= x <= r[0] + BLS and r[1] <= pc2[1] <= r[1] + BLS:
-                    yen = r
-                    break
-            if yen and enydist == st.raylen + ENS:
-                enydist = (pc2[1] - pc[1]) / sn
-            if ybl:
+            y = pc2[1] + sgn[1]
+            if (x - x % BLS, y - y % BLS) in allrects:
+                tobreak = True
                 ydist = (pc2[1] - pc[1]) / sn
+                da1 = pc[0] + ydist * cs
+                blocky = int(da1 / BLS), int(y / BLS)
+                break
+            for r in enemyset:
+                if not r:
+                    continue
+                if r[0] <= x <= r[0] + BLS and r[1] <= y <= r[1] + BLS:
+                    enydist = (pc2[1] - pc[1]) / sn
+                    ym = r
+                    break
+            if tobreak:
                 break
             ydist = st.raylen + BLS
             pc2[1] += sgn[1] * BLS
         if xdist != st.raylen + BLS or ydist != st.raylen + BLS:
-            dists[rayn] = min(xdist, ydist) * optcos(fov / 2 - rayn * step)
-            if xdist < ydist:
-                vsblocks[rayn] = xbl
-            else:
-                vsblocks[rayn] = ybl
-        else:
-            dists[rayn] = 0
+            final = min(xdist, ydist) * optcos(fov / 2 - rayn * step)
+            if final:
+                height = k / final
+                if xdist < ydist:
+                    block = blockx
+                    if block == speccoord:
+                        this_texture = spectexture.get(da0, height)
+                    else:
+                        this_texture = texture.get(da0, height)
+                else:
+                    block = blocky
+                    if block == speccoord:
+                        this_texture = spectexture.get(da1, height)
+                    else:
+                        this_texture = texture.get(da1, height)
+                draw(screen, size, height, rayn, this_texture, yangle)
+                # print(block)
         if enxdist != st.raylen + ENS or enydist != st.raylen + ENS:
-            endists[rayn] = min(enxdist, enydist) * optcos(fov / 2 - rayn * step)
-            if enxdist < enydist:
-                vsens[rayn] = xen
-            else:
-                vsens[rayn] = yen
-        else:
-            endists[rayn] = 0
-    for rayn, dist in enumerate(endists):
-        if not dist:
-            continue
-        if vsens[rayn] in enemy_rects:
-            colour = int(120 / (1 + dist * 0.01))
-            height = k / (1.5 * dist)
-            draw_enemy(screen, size, height, colour, rayn)
-
-
-
-    for rayn, dist in enumerate(dists):
-        if not dist:
-            continue
-        drawing_layers = []
-        for layer in range(st.maxheight):
-            if vsblocks[rayn] in rects[layer]:
-                drawing_layers += [layer]
-        colour = int(255 / (1 + dist * 0.01))
-        height = k / dist
-        draw(screen, size, height, colour, rayn, drawing_layers)
-
-    pg.draw.line(screen, (0, 200, 0), (490, 299), (510, 299), 2)
-    pg.draw.line(screen, (0, 200, 0), (499, 290), (499, 310), 2)
-
+            enfinal = min(enxdist, enydist) * optcos(fov / 2 - rayn * step)
+            if enfinal:
+                colour = int(120 / (1 + enfinal * 0.01))
+                height = k / (1.5 * enfinal)
+                draw_enemy(screen, size, height, colour, rayn)
+                if enxdist < enydist:
+                    fm = xm
+                else:
+                    fm = ym
+                if rayn == midray and enfinal <= 100:
+                    monster_drawn = True
+    if monster_drawn:
+        can_attack = True
+        monster_drawn = False
+    else:
+        can_attack = False
     for i in range(4):
         if pressed[i]:
-            plr.update(optcos(angle - radians(90 * i + 40)) * tick / 10,
-                       optsin(angle - radians(90 * i + 40)) * tick / 10, objs[0], objs[1], enms)
-            if not plr.update(optcos(angle - radians(90 * i + 40)) * tick / 10,
-                       optsin(angle - radians(90 * i + 40)) * tick / 10, objs[0], objs[1], enms):
-                run = False
-                endd()
+            plr.update(optcos(angle - radians(90 * i + 40)) * tick / speed,
+                       optsin(angle - radians(90 * i + 40)) * tick / speed, objs, speed == 5)
     pg.display.flip()
-    vsblocks = [[]] * st.rays
     for i in pg.event.get():
         if i.type == pg.QUIT:
             run = False
@@ -256,25 +252,44 @@ while run:
             if i.key == pg.K_ESCAPE:
                 run = False
                 endd()
+            elif i.key == pg.K_LCTRL:
+                speed -= 5
+                df = 10
             else:
                 for key in range(4):
                     if i.key == keys[key]:
                         pressed[key] = True
         elif i.type == pg.KEYUP:
-            for key in range(4):
-                if i.key == keys[key]:
-                    pressed[key] = False
+            if i.key == pg.K_LCTRL:
+                speed += 5
+                df = -10
+            else:
+                for key in range(4):
+                    if i.key == keys[key]:
+                        pressed[key] = False
         elif i.type == pg.MOUSEMOTION:
             angle += radians(i.pos[0] - size[0] // 2) / 2
             if angle >= 2 * PI:
                 angle = 0
             elif angle < 0:
                 angle = 2 * PI
+            yangle += radians(i.pos[1] - size[1] // 2) / 2
+            if yangle >= 7:
+                yangle = 7
+            elif yangle < -1:
+                yangle = -1
             pg.mouse.set_pos(size[0] // 2, size[1] // 2)
         elif i.type == pg.MOUSEBUTTONDOWN:
-            for n in enms:
-                if n.coords() == vsens[midray]:
-                    if n.die(10):
-                        n.kill()
-                    else:
-                        n.die(10)
+            if can_attack:
+                enemies[enemy_rects.index(fm)].terminate()
+    if df > 0:
+        df -= tick / 20
+        fov = origfov + radians(10 - int(df))
+        if df < 1:
+            df = 0
+    elif df < 0:
+        df += tick / 20
+        fov = origfov + radians(-1 * int(df))
+        if df > -1:
+            df = 0
+#    print(*plr.get_block())

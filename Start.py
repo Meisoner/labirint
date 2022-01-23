@@ -1,7 +1,6 @@
 import pygame
 import sys
 import os
-from main import *
 
 
 FPS = 50
