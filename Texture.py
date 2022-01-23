@@ -23,4 +23,4 @@ class Texture:
         offset = int(offs) % BLS
 #        print(offset * self.raywidth, 0, self.raywidth, self.quality)
         return pg.transform.scale(self.img.subsurface(offset * self.raywidth, 0, self.raywidth, self.quality),
-                                  (2, height))
+                                  (2, int(height)))

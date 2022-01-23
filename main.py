@@ -5,17 +5,100 @@ from Utilites import *
 from Generator import labirint
 from Texture import Texture
 
+import os
+import pygame
+import sys
+
+
+def load_image(name, colorkey=None):
+    fullname = os.path.join('', name)
+    if not os.path.isfile(fullname):
+        print(f"Файл с изображением '{fullname}' не найден")
+        sys.exit()
+    image = pygame.image.load(fullname)
+    if colorkey is not None:
+        image = image.convert()
+        if colorkey == -1:
+            colorkey = image.get_at((0, 0))
+        image.set_colorkey(colorkey)
+    else:
+        # image = image.convert_alpha()
+        pass
+    return image
+
+
+def start_screen():
+    intro_text = ["ЗАСТАВКА", "",
+                  "Счастливых вам голодных игр))"]
+
+    fon = pygame.transform.scale(load_image('fon.jpg'), (WIDTH, HEIGHT))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 30)
+    text_coord = 50
+    for line in intro_text:
+        string_rendered = font.render(line, 1, pygame.Color(180, 150, 230))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 10
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+    f = True
+
+    while f:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                f = False
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                f = False
+                return None
+        pygame.display.flip()
+
+
+def endd():
+    intro_text = ["ПОЖИЛИ...", ""
+                               "И ХВАТИТ)))"]
+
+    fon = pygame.transform.scale(load_image('end.jpg'), (WIDTH, HEIGHT))
+    screen.blit(fon, (0, 0))
+    font = pygame.font.Font(None, 50)
+    text_coord = 30
+    for line in intro_text:
+        string_rendered = font.render(line, 1, pygame.Color('black'))
+        intro_rect = string_rendered.get_rect()
+        text_coord += 10
+        intro_rect.top = text_coord
+        intro_rect.x = 120
+        text_coord += intro_rect.height
+        screen.blit(string_rendered, intro_rect)
+
+    f = True
+
+    while f:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                f = False
+            elif event.type == pygame.KEYDOWN or \
+                    event.type == pygame.MOUSEBUTTONDOWN:
+                exit()
+                return None
+        pygame.display.flip()
+
+
+size = WIDTH, HEIGHT = (1000, 600)
 
 BLS = st.BLS
 ENS = 20
 
-
 pg.init()
-screen = pg.display.set_mode(size := (1000, 600))
+screen = pg.display.set_mode(size)
 texture = Texture('txtr.png', 1000)
 pg.mouse.set_visible(False)
 run, tobreak = True, False
 pg.display.set_caption('lol')
+start_screen()
 objs = pg.sprite.Group()
 dists, vsblocks = [0] * st.rays, [[]] * st.rays
 endists, vsens = [0] * st.rays, [[]] * st.rays
@@ -168,6 +251,7 @@ while run:
         elif i.type == pg.KEYDOWN:
             if i.key == pg.K_ESCAPE:
                 run = False
+                endd()
             elif i.key == pg.K_LCTRL:
                 speed -= 5
                 df = 10
