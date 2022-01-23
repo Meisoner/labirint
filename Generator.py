@@ -31,7 +31,7 @@ def filtr(startpos, lab):
     return lcopy
 
 
-def labirint(size, startpos):
+def prototype(size, startpos):
     res = [[1] * size for _ in range(size)]
     x, y = startpos
     if x:
@@ -44,12 +44,18 @@ def labirint(size, startpos):
         res[x][y] = 0
         if napr == 1:
             x += 1
+        elif napr == 2:
+            x -= 1
         elif napr == 0:
             y += 1
         if size in (x, y):
             break
         if not rr(3):
-            napr = 1 - napr
+            napr = 1 - int(bool(napr))
+            if napr and not rr(4):
+                napr += 1
+    for i in range(200):
+        res[rr(size - 2)][rr(size - 2)] = 0
 #    goal = [x, y, 1, rr(1, 4)]
 #    k = 1
 #    while goal:
@@ -67,7 +73,15 @@ def labirint(size, startpos):
     return filtr(startpos, res)
 
 
-for i in labirint(100, (5, 0)):
-    for j in i:
-        print(j, end='')
-    print()
+def labirint(size, startpos):
+    res = prototype(size, startpos)
+    while any(res[-2][1:-1]):
+        res = prototype(size, startpos)
+    for i in res:
+        for j in i:
+            print(j, end='')
+        print()
+    return res
+
+
+labirint(100, (0, 5))

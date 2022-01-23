@@ -11,13 +11,13 @@ class Player(pg.sprite.Sprite):
         self.image = pg.Surface((20, 20))
         pg.draw.rect(self.image, (100, 100, 100), (0, 0, 20, 20))
         self.rect = self.image.get_rect()
-        self.rect.x, self.rect.y = -100, -100
+        self.rect.x, self.rect.y = 125, -30
         self.dx = self.dy = 0
 
     def get_centre(self):
         return (self.rect.x + self.rect.size[0] // 2, self.rect.y + self.rect.size[1] // 2)
 
-    def update(self, x, y, objs):
+    def update(self, x, y, objs, deb):
         backup = self.rect.x, self.rect.y, self.dx, self.dy
         self.dx += x
         self.dy += y
@@ -27,11 +27,15 @@ class Player(pg.sprite.Sprite):
         if not (-1 < self.dy < 1):
             self.rect.y += int(self.dy)
             self.dy -= int(self.dy)
-        if pg.sprite.spritecollideany(self, objs):
-            backup2 = self.rect.x, self.dx
-            self.rect.x, self.dx = backup[0], backup[2]
+        if not deb:
             if pg.sprite.spritecollideany(self, objs):
-                self.rect.x, self.dx = backup2
-                self.rect.y, self.dy = backup[1], backup[3]
+                backup2 = self.rect.x, self.dx
+                self.rect.x, self.dx = backup[0], backup[2]
                 if pg.sprite.spritecollideany(self, objs):
-                    self.rect.x, self.rect.y, self.dx, self.dy = backup
+                    self.rect.x, self.dx = backup2
+                    self.rect.y, self.dy = backup[1], backup[3]
+                    if pg.sprite.spritecollideany(self, objs):
+                        self.rect.x, self.rect.y, self.dx, self.dy = backup
+
+    def get_block(self):
+        return self.rect.x // BLS, self.rect.y // BLS

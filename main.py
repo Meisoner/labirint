@@ -36,9 +36,10 @@ lb = labirint(st.lablen, (1, 0))
 for x in range(st.lablen):
     for y in range(st.lablen):
         if lb[x][y]:
-            Block(objs, block_image, x, y)
-# Block(objs[0], block_image, 3, 4, 0)
-# Block(objs[0], block_image, 4, 4, 0)
+            Block(objs, block_image, x + 1, y + 1)
+dopblocks = [(3, 0), (3, -1), (3, -2), (2, -2), (1, -2), (1, 0), (1, -1)]
+for x, y in dopblocks:
+    Block(objs, block_image, x, y)
 xdist, ydist = 0, 0
 k = BLS * st.rays / (2 * math.tan(fov / 2))
 allrects = set(rects)
@@ -47,10 +48,15 @@ monster, xm, ym, fm = [False] * 4
 background = pg.transform.scale(pg.image.load('BG.png'), size)
 speed, df = 10, 0
 da0, da1 = 0, 0
+yangle = PI
+level = 1
+spectexture, speccoord = Texture('txtr.png', 1000, 'Вход ->\nУровень 1'), (3, 1)
+blockx, blocky = (0, 0), (0, 0)
+pg.mouse.set_pos(size[0] // 2, size[1] // 2)
 while run:
     tick = clock.tick()
     screen.blit(background, (0, 0))
-    pg.draw.rect(screen, (50, 30, 0), (0, size[1] - 300, size[0], 300), 0)
+    draw_floor(screen, size, yangle)
     pc = plr.get_centre()
     enemyset = set(enemy_rects)
     layer.fill((0, 0, 0))
@@ -82,6 +88,7 @@ while run:
                 tobreak = True
                 xdist = (pc2[0] - pc[0]) / cs
                 da0 = pc[1] + xdist * sn
+                blockx = int(x / BLS), int(da0 / BLS)
                 break
             for r in enemyset:
                 if not r:
@@ -102,6 +109,7 @@ while run:
                 tobreak = True
                 ydist = (pc2[1] - pc[1]) / sn
                 da1 = pc[0] + ydist * cs
+                blocky = int(da1 / BLS), int(y / BLS)
                 break
             for r in enemyset:
                 if not r:
@@ -119,10 +127,19 @@ while run:
             if final:
                 height = k / final
                 if xdist < ydist:
-                    this_texture = texture.get(da0, height)
+                    block = blockx
+                    if block == speccoord:
+                        this_texture = spectexture.get(da0, height)
+                    else:
+                        this_texture = texture.get(da0, height)
                 else:
-                    this_texture = texture.get(da1, height)
-                draw(screen, size, height, rayn, this_texture)
+                    block = blocky
+                    if block == speccoord:
+                        this_texture = spectexture.get(da1, height)
+                    else:
+                        this_texture = texture.get(da1, height)
+                draw(screen, size, height, rayn, this_texture, yangle)
+                # print(block)
         if enxdist != st.raylen + ENS or enydist != st.raylen + ENS:
             enfinal = min(enxdist, enydist) * optcos(fov / 2 - rayn * step)
             if enfinal:
@@ -143,7 +160,7 @@ while run:
     for i in range(4):
         if pressed[i]:
             plr.update(optcos(angle - radians(90 * i + 40)) * tick / speed,
-                       optsin(angle - radians(90 * i + 40)) * tick / speed, objs)
+                       optsin(angle - radians(90 * i + 40)) * tick / speed, objs, speed == 5)
     pg.display.flip()
     for i in pg.event.get():
         if i.type == pg.QUIT:
@@ -172,6 +189,11 @@ while run:
                 angle = 0
             elif angle < 0:
                 angle = 2 * PI
+            yangle += radians(i.pos[1] - size[1] // 2) / 2
+            if yangle >= 7:
+                yangle = 7
+            elif yangle < -1:
+                yangle = -1
             pg.mouse.set_pos(size[0] // 2, size[1] // 2)
         elif i.type == pg.MOUSEBUTTONDOWN:
             if can_attack:
@@ -186,3 +208,4 @@ while run:
         fov = origfov + radians(-1 * int(df))
         if df > -1:
             df = 0
+#    print(*plr.get_block())
