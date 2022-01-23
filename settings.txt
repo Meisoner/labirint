@@ -1,0 +1,5 @@
+fov 80
+rays 500
+raylen 1000
+lablen 100
+BLS 50
