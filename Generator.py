@@ -32,53 +32,62 @@ def filtr(startpos, lab):
 
 
 def prototype(size, startpos):
-    res = [[1] * size for _ in range(size)]
-    x, y = startpos
-    if x:
-        napr = 0
-    elif y:
-        napr = 1
-    else:
-        return
-    rzv = []
-    while True:
-        res[x][y] = 0
-        if napr == 1:
-            x += 1
-        elif napr == 2:
-            x -= 1
-        elif napr == 0:
-            y += 1
-        if size in (x, y):
-            break
-        if not rr(3):
-            napr = 1 - int(bool(napr))
-            if napr and not rr(4):
-                napr += 1
-            if napr:
-                rzv += [(x, y, 3 - napr)]
-    for i in rzv:
-        x, y = i[0], i[1]
-        napr = i[2]
-        if 7 < x < size - 7:
-            for i in range(rr(2, 5)):
-                if napr == 1:
-                    x += 1
-                else:
-                    x -= 1
-                res[x][y] = 0
-    return filtr(startpos, res)
+    try:
+        res = [[1] * size for _ in range(size)]
+        x, y = startpos
+        if x:
+            napr = 0
+        elif y:
+            napr = 1
+        else:
+            return
+        rzv = []
+        while True:
+            res[x][y] = 0
+            if napr == 1:
+                x += 1
+            elif napr == 2:
+                x -= 1
+            elif napr == 0:
+                y += 1
+            if size in (x, y):
+                break
+            if not rr(3):
+                napr = 1 - int(bool(napr))
+                if napr and not rr(4):
+                    napr += 1
+                if napr:
+                    rzv += [(x, y, 3 - napr)]
+        if y == size:
+            endpos = x, 0
+        else:
+            endpos = y, 0
+        for i in rzv:
+            x, y = i[0], i[1]
+            napr = i[2]
+            if 7 < x < size - 7:
+                for i in range(rr(2, 6)):
+                    if napr == 1:
+                        x += 1
+                    else:
+                        x -= 1
+                    res[x][y] = 0
+                res[x][y + 1] = 0
+    except Exception:
+        return [[1, 1] * 2]
+    return filtr(startpos, res), endpos
 
 
 def labirint(size, startpos):
     res = prototype(size, startpos)
-    while any(res[-2][1:-1]):
+    while any(res[0][-2][1:-1]):
         res = prototype(size, startpos)
-    for i in res:
+    for i in res[0]:
         for j in i:
             print(j, end='')
         print()
-    return res
+    print(res[1])
+    return res[0]
 
 
 if __name__ == '__main__':
