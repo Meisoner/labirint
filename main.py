@@ -4,10 +4,10 @@ from Block import *
 from Utilites import *
 from Generator import labirint
 from Texture import Texture
-
 import os
 import pygame
 import sys
+import datetime
 
 
 def load_image(name, colorkey=None):
@@ -31,7 +31,7 @@ def start_screen():
     intro_text = ["ЗАСТАВКА", "",
                   "Счастливых вам голодных игр))"]
 
-    fon = pygame.transform.scale(load_image('fon.jpg'), (WIDTH, HEIGHT))
+    fon = pygame.transform.scale(load_image('data/start.jpg'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
     font = pygame.font.Font(None, 30)
     text_coord = 50
@@ -57,11 +57,35 @@ def start_screen():
         pygame.display.flip()
 
 
+def new_location(endpos):
+    global level, speccoord, spectexture, stset, objs, block_image, allrects, rects
+    level += 1
+    x, y = endpos
+    spectexture += [Texture('data/txtr.png', 1000, 'Вход ->\nУровень ' + str(level))]
+    speccoord += [(x + 1, y + 1)]
+    stset = set(speccoord)
+    lab2, nend = labirint(st.lablen, (1, 0))
+    nend = (nend[0] + x - 1, nend[1] + y + 1)
+    for nx in range(st.lablen):
+        for ny in range(st.lablen):
+            if lab2[nx][ny]:
+                Block(objs, block_image, nx + x - 1, ny + y + 1)
+    allrects = set(rects)
+    return nend
+
+
 def endd():
+    global results
     intro_text = ["ПОЖИЛИ...", ""
                                "И ХВАТИТ)))"]
-
-    fon = pygame.transform.scale(load_image('end.jpg'), (WIDTH, HEIGHT))
+    if results:
+        with open('results.txt', 'a') as f:
+            f.write(str(datetime.datetime.now()) + '\n')
+            intro_text += ['Результаты:']
+            for num, i in enumerate(results):
+                intro_text += [str(num + 1) + ' ур. - ' + str(i) + ' секунд']
+                f.write(str(num + 1) + ' level - ' + str(i) + ' seconds\n')
+    fon = pygame.transform.scale(load_image('data/end.jpg'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
     font = pygame.font.Font(None, 50)
     text_coord = 30
@@ -94,7 +118,7 @@ ENS = 20
 
 pg.init()
 screen = pg.display.set_mode(size)
-texture = Texture('txtr.png', 1000)
+texture = Texture('data/txtr.png', 1000)
 pg.mouse.set_visible(False)
 run, tobreak = True, False
 pg.display.set_caption('lol')
@@ -115,7 +139,8 @@ block_image = pg.Surface((BLS, BLS))
 pg.draw.rect(block_image, (255, 0, 255), (0, 0, BLS, BLS))
 enemy_image = pg.Surface((BLS, BLS))
 pg.draw.rect(enemy_image, (255, 0, 0), (0, 0, BLS, BLS))
-lb = labirint(st.lablen, (1, 0))
+lb, end = labirint(st.lablen, (1, 0))
+end = (end[0] + 1, end[1] + 1)
 for x in range(st.lablen):
     for y in range(st.lablen):
         if lb[x][y]:
@@ -128,16 +153,21 @@ k = BLS * st.rays / (2 * math.tan(fov / 2))
 allrects = set(rects)
 midray, can_attack, monster_drawn = st.rays // 2, False, False
 monster, xm, ym, fm = [False] * 4
-background = pg.transform.scale(pg.image.load('BG.png'), size)
+background = pg.transform.scale(pg.image.load('data/BG.png'), size)
 speed, df = 10, 0
 da0, da1 = 0, 0
 yangle = PI
 level = 1
-spectexture, speccoord = Texture('txtr.png', 1000, 'Вход ->\nУровень 1'), (3, 1)
+spectexture, speccoord = [Texture('data/txtr.png', 1000, 'Вход ->\nУровень 1')], [(3, 1)]
+stset = set(speccoord)
 blockx, blocky = (0, 0), (0, 0)
-pg.mouse.set_pos(size[0] // 2, size[1] // 2)
+lastend = end
+end = new_location(end)
+results = []
+time_on_level = 0
 while run:
     tick = clock.tick()
+    time_on_level += tick / 1000
     screen.blit(background, (0, 0))
     draw_floor(screen, size, yangle)
     pc = plr.get_centre()
@@ -211,14 +241,18 @@ while run:
                 height = k / final
                 if xdist < ydist:
                     block = blockx
-                    if block == speccoord:
-                        this_texture = spectexture.get(da0, height)
+                    if block in stset:
+                        for n in range(len(speccoord)):
+                            if speccoord[n] == block:
+                                this_texture = spectexture[n].get(da0, height)
                     else:
                         this_texture = texture.get(da0, height)
                 else:
                     block = blocky
-                    if block == speccoord:
-                        this_texture = spectexture.get(da1, height)
+                    if block in stset:
+                        for n in range(len(speccoord)):
+                            if speccoord[n] == block:
+                                this_texture = spectexture[n].get(da1, height)
                     else:
                         this_texture = texture.get(da1, height)
                 draw(screen, size, height, rayn, this_texture, yangle)
@@ -243,7 +277,8 @@ while run:
     for i in range(4):
         if pressed[i]:
             plr.update(optcos(angle - radians(90 * i + 40)) * tick / speed,
-                       optsin(angle - radians(90 * i + 40)) * tick / speed, objs, speed == 5)
+                       optsin(angle - radians(90 * i + 40)) * tick / speed, objs, False)
+            break
     pg.display.flip()
     for i in pg.event.get():
         if i.type == pg.QUIT:
@@ -292,4 +327,8 @@ while run:
         fov = origfov + radians(-1 * int(df))
         if df > -1:
             df = 0
-#    print(*plr.get_block())
+    if plr.get_block() == lastend:
+        lastend = end
+        end = new_location(end)
+        results += [round(time_on_level)]
+        time_on_level = 0

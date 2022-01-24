@@ -17,7 +17,7 @@ class Player(pg.sprite.Sprite):
     def get_centre(self):
         return (self.rect.x + self.rect.size[0] // 2, self.rect.y + self.rect.size[1] // 2)
 
-    def update(self, x, y, objs, deb):
+    def update(self, x, y, objs, debug):
         backup = self.rect.x, self.rect.y, self.dx, self.dy
         self.dx += x
         self.dy += y
@@ -27,7 +27,7 @@ class Player(pg.sprite.Sprite):
         if not (-1 < self.dy < 1):
             self.rect.y += int(self.dy)
             self.dy -= int(self.dy)
-        if not deb:
+        if not debug:
             if pg.sprite.spritecollideany(self, objs):
                 backup2 = self.rect.x, self.dx
                 self.rect.x, self.dx = backup[0], backup[2]
