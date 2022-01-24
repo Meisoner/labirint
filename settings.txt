@@ -1,4 +1,4 @@
-fov 80
+fov 70
 rays 500
 raylen 1000
 lablen 100

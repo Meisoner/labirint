@@ -165,6 +165,8 @@ lastend = end
 end = new_location(end)
 results = []
 time_on_level = 0
+pg.mixer.music.load('data/music.mp3')
+pg.mixer.music.play(-1)
 while run:
     tick = clock.tick()
     time_on_level += tick / 1000
