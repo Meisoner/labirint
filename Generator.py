@@ -59,9 +59,9 @@ def prototype(size, startpos):
                 if napr:
                     rzv += [(x, y, 3 - napr)]
         if y == size:
-            endpos = x, 0
+            endpos = x, y - 1
         else:
-            endpos = y, 0
+            return [[1, 1, 1] for _ in range(3)], (0, 0)
         for i in rzv:
             x, y = i[0], i[1]
             napr = i[2]
@@ -74,7 +74,7 @@ def prototype(size, startpos):
                     res[x][y] = 0
                 res[x][y + 1] = 0
     except Exception:
-        return [[1, 1] * 2]
+        return [[1, 1, 1] for _ in range(3)], (0, 0)
     return filtr(startpos, res), endpos
 
 
@@ -82,13 +82,4 @@ def labirint(size, startpos):
     res = prototype(size, startpos)
     while any(res[0][-2][1:-1]):
         res = prototype(size, startpos)
-    for i in res[0]:
-        for j in i:
-            print(j, end='')
-        print()
-    print(res[1])
-    return res[0]
-
-
-if __name__ == '__main__':
-    labirint(100, (5, 0))
+    return res
