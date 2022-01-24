@@ -1,14 +1,6 @@
 from random import randrange as rr
 
 
-def optimals(x, y, dists):
-    res = []
-    for i in range(len(dists)):
-        if dists[i] >= 7:
-            res += [[i, rr(3, 7)]]
-    return res
-
-
 def filtr(startpos, lab):
     lcopy = []
     for i in lab:
@@ -42,6 +34,7 @@ def prototype(size, startpos):
         else:
             return
         rzv = []
+        ln = 0
         while True:
             res[x][y] = 0
             if napr == 1:
@@ -52,12 +45,14 @@ def prototype(size, startpos):
                 y += 1
             if size in (x, y):
                 break
-            if not rr(3):
+            ln += 1
+            if not rr(3) and ln:
                 napr = 1 - int(bool(napr))
                 if napr and not rr(4):
                     napr += 1
                 if napr:
                     rzv += [(x, y, 3 - napr)]
+                ln = 0
         if y == size:
             endpos = x, y - 1
         else:
