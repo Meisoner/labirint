@@ -5,6 +5,7 @@ from Settings import st
 BLS = st.BLS
 
 
+# Класс для работы с игроком на двумерном поле.
 class Player(pg.sprite.Sprite):
     def __init__(self, group):
         super().__init__(group)
@@ -37,5 +38,6 @@ class Player(pg.sprite.Sprite):
                     if pg.sprite.spritecollideany(self, objs):
                         self.rect.x, self.rect.y, self.dx, self.dy = backup
 
+    # Возвращает координаты на клеточной сетке.
     def get_block(self):
         return self.rect.x // BLS, self.rect.y // BLS

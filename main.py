@@ -36,7 +36,7 @@ def start_screen():
     font = pygame.font.Font(None, 30)
     text_coord = 50
     for line in intro_text:
-        string_rendered = font.render(line, 1, pygame.Color(180, 150, 230))
+        string_rendered = font.render(line, True, pygame.Color(180, 150, 230))
         intro_rect = string_rendered.get_rect()
         text_coord += 10
         intro_rect.top = text_coord
@@ -57,6 +57,7 @@ def start_screen():
         pygame.display.flip()
 
 
+# Создаёт новый уровень.
 def new_location(endpos):
     global level, speccoord, spectexture, stset, objs, block_image, allrects, rects
     level += 1
@@ -74,6 +75,7 @@ def new_location(endpos):
     return nend
 
 
+# Конечное окно.
 def endd():
     global results
     intro_text = ["ПОЖИЛИ...", ""
@@ -82,15 +84,23 @@ def endd():
         with open('results.txt', 'a') as f:
             f.write(str(datetime.datetime.now()) + '\n')
             intro_text += ['Результаты:']
+            count_average = False
             for num, i in enumerate(results):
-                intro_text += [str(num + 1) + ' ур. - ' + str(i) + ' секунд']
+                if not count_average:
+                   intro_text += [str(num + 1) + ' ур. - ' + str(i) + ' секунд']
                 f.write(str(num + 1) + ' level - ' + str(i) + ' seconds\n')
+                if num == 7:
+                    count_average = True
+            if count_average:
+                average = sum(results[7:]) // (len(results) - 7)
+                intro_text += ['...и ещё ' + str(len(results) - 8) + ' ур., среднее время: ' +
+                               str(average) + ' секунд']
     fon = pygame.transform.scale(load_image('data/end.jpg'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
     font = pygame.font.Font(None, 50)
     text_coord = 30
     for line in intro_text:
-        string_rendered = font.render(line, 1, pygame.Color('black'))
+        string_rendered = font.render(line, True, pygame.Color('black'))
         intro_rect = string_rendered.get_rect()
         text_coord += 10
         intro_rect.top = text_coord
@@ -178,6 +188,7 @@ while run:
     objs.draw(layer)
     plrs.draw(layer)
     for rayn in range(st.rays):
+        # Вычисление тригонометрических функций для текущего угла взгляда игрока.
         sn = optsin(angle - fov + rayn * step)
         if not sn:
             sn = 10 ** -5
@@ -185,7 +196,9 @@ while run:
         if not cs:
             cs = 10 ** -5
         tg = sn / cs
-        pc2 = [(i // BLS) * BLS for i in pc]
+        # Вычисление округлённых координат игрока на клеточном поле.
+        pc2 = [i - i % BLS for i in pc]
+        # Вычисление типов углов.
         sgn = [1, 1]
         if cs < 0:
             sgn[0] = -1
@@ -197,8 +210,10 @@ while run:
         enydist, enxdist = st.raylen + ENS, st.raylen + ENS
         tobreak = False
         for _ in range(size[0] // BLS):
+            # Вычисление предположительной точки пересечентя блока с лучом.
             y = pc[1] + (pc2[0] - pc[0]) * tg
             x = pc2[0] + sgn[0]
+            # Проверка наличия такого блока.
             if (x - x % BLS, y - y % BLS) in allrects:
                 tobreak = True
                 xdist = (pc2[0] - pc[0]) / cs
@@ -218,6 +233,7 @@ while run:
             pc2[0] += sgn[0] * BLS
         tobreak = False
         for _ in range(size[1] // BLS):
+            # Аналогично для другой оси.
             x = pc[0] + (pc2[1] - pc[1]) / tg
             y = pc2[1] + sgn[1]
             if (x - x % BLS, y - y % BLS) in allrects:
@@ -238,6 +254,7 @@ while run:
             ydist = st.raylen + BLS
             pc2[1] += sgn[1] * BLS
         if xdist != st.raylen + BLS or ydist != st.raylen + BLS:
+            # Выччисление итогового расстояния до блока.
             final = min(xdist, ydist) * optcos(fov / 2 - rayn * step)
             if final:
                 height = k / final
@@ -257,6 +274,7 @@ while run:
                                 this_texture = spectexture[n].get(da1, height)
                     else:
                         this_texture = texture.get(da1, height)
+                # Рисование отрезка на текущем луче по заданным параметрам.
                 draw(screen, size, height, rayn, this_texture, yangle)
                 # print(block)
         if enxdist != st.raylen + ENS or enydist != st.raylen + ENS:
@@ -319,14 +337,17 @@ while run:
         elif i.type == pg.MOUSEBUTTONDOWN:
             if can_attack:
                 enemies[enemy_rects.index(fm)].terminate()
+    # Динамическое изменение поля зрения во время спринта.
     if df > 0:
         df -= tick / 20
         fov = origfov + radians(10 - int(df))
+        k = BLS * st.rays / (2 * math.tan(fov / 2))
         if df < 1:
             df = 0
     elif df < 0:
         df += tick / 20
         fov = origfov + radians(-1 * int(df))
+        k = BLS * st.rays / (2 * math.tan(fov / 2))
         if df > -1:
             df = 0
     if plr.get_block() == lastend:

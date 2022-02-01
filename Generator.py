@@ -1,6 +1,15 @@
 from random import randrange as rr
+from Settings import st
+from Utilites import SafeGenerationError
 
 
+# safe_generator в settings.txt исключает возможность багов, но делает лабиринт менее интересным
+safe = int(bool(st.safe_generator))
+if safe and st.lablen < 100:
+    raise SafeGenerationError('Safe generator does not support level size reduction, switch it to 0 first')
+
+
+# Фильтрует от лишних блоков
 def filtr(startpos, lab):
     lcopy = []
     for i in lab:
@@ -23,6 +32,7 @@ def filtr(startpos, lab):
     return lcopy
 
 
+# Создаёт прототип лабиринта
 def prototype(size, startpos):
     try:
         res = [[1] * size for _ in range(size)]
@@ -46,9 +56,9 @@ def prototype(size, startpos):
             if size in (x, y):
                 break
             ln += 1
-            if not rr(3) and ln:
+            if not rr(3) and ln > safe:
                 napr = 1 - int(bool(napr))
-                if napr and not rr(4):
+                if napr and not rr(2 + safe):
                     napr += 1
                 if napr:
                     rzv += [(x, y, 3 - napr)]
@@ -73,8 +83,17 @@ def prototype(size, startpos):
     return filtr(startpos, res), endpos
 
 
+# Возвращает готовый лабиринт
 def labirint(size, startpos):
     res = prototype(size, startpos)
-    while any(res[0][-2][1:-1]):
+    while any(res[0][-2][1:-1]) or not all(res[0][0]):
         res = prototype(size, startpos)
+    for i in range(size):
+        res[0][i][-1] = 1
+    res[0][res[1][0]][res[1][1]] = 0
+#    for i in res[0]:
+#        for j in i:
+#            print(j, end='')
+#        print()
+#    print()
     return res

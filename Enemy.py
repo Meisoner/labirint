@@ -8,6 +8,8 @@ BLS = st.BLS
 enemy_rects, enemies = list(), list()
 enemyset = set()
 
+
+# Работа с сущностями не была реализована.
 class Enemy(pg.sprite.Sprite):
     def __init__(self, group, x, y):
         global enemy_rects, enemyset, enemies

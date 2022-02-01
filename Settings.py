@@ -1,3 +1,4 @@
+# Класс, отвечающий за загрузку переменных из файла.
 class Settings:
     def __init__(self, file):
         self.mdict = dict()
@@ -5,6 +6,8 @@ class Settings:
             for i in f.read().split('\n'):
                 try:
                     s, arg = i.split()
+                    if s == '.':
+                        continue
                     if arg.isnumeric():
                         self.mdict[s] = int(arg)
                     elif arg.replace('.', '').isnumeric():

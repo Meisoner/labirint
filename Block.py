@@ -6,6 +6,7 @@ BLS = st.BLS
 rects = list()
 
 
+# Класс для работы с блоками на двумерном поле.
 class Block(pg.sprite.Sprite):
     def __init__(self, group, image, x, y):
         global rects
