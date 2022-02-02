@@ -1,3 +1,9 @@
+from Settings import st
+
+
+defaults = {'raylen': 1000, 'BLS': 50, 'fov': 70, 'rays': 500, 'lablen': 100, 'safe_generator': 1}
+st.set_defaults(defaults)
+
 from Player import Player
 from Enemy import *
 from Block import *

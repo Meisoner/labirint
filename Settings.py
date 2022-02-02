@@ -2,6 +2,7 @@
 class Settings:
     def __init__(self, file):
         self.mdict = dict()
+        self.file = file
         with open(file) as f:
             for i in f.read().split('\n'):
                 try:
@@ -16,6 +17,13 @@ class Settings:
                         self.mdict[s] = arg
                 except Exception:
                     continue
+
+    def set_defaults(self, defaults):
+        with open(self.file, 'a') as f:
+            for i in defaults.keys():
+                if i not in self.mdict.keys():
+                    self.mdict[i] = defaults[i]
+                    f.writelines('\n' + i + ' ' + str(defaults[i]))
 
     def __getattr__(self, k):
         if k in self.mdict.keys():
